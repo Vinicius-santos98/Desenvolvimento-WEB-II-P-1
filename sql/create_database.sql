@@ -1,6 +1,8 @@
--- Execute este script no MySQL (cliente de linha de comando ou Workbench)
--- para criar o banco de dados usado pela API, exatamente como feito na aula.
+-- Execute este script conectado ao Postgres (psql ou pgAdmin) para criar
+-- o banco de dados usado pela API, equivalente ao que foi feito na aula.
+--
+-- Via linha de comando (conectando ao banco padrão "postgres"):
+--   psql -U postgres -h localhost -c "CREATE DATABASE node_api WITH ENCODING 'UTF8';"
 
 CREATE DATABASE node_api
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
+  WITH ENCODING 'UTF8';

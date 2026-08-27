@@ -1,12 +1,12 @@
 # Baião P1 — API Node.js + TypeScript
 
 Projeto criado seguindo a **Aula 01 - Configurando API NODEJS**: ambiente de desenvolvimento
-para uma API com Node.js, TypeScript, Express, MySQL e TypeORM.
+para uma API com Node.js, TypeScript, Express, PostgreSQL e TypeORM.
 
 ## Requisitos
 
 - [Node.js](https://nodejs.org/) 22 ou superior (verifique com `node -v`)
-- [MySQL](https://dev.mysql.com/downloads/mysql/) instalado e em execução
+- [PostgreSQL](https://www.postgresql.org/download/) instalado e em execução
 - [Visual Studio Code](https://code.visualstudio.com/) (recomendado)
 
 ## Estrutura
@@ -18,7 +18,7 @@ src/
   controllers/
     login.ts              -> rotas e inicialização da conexão com o banco
 sql/
-  create_database.sql    -> script para criar o banco "node_api" no MySQL
+  create_database.sql    -> script para criar o banco "node_api" no PostgreSQL
 ```
 
 ## Configuração
@@ -27,24 +27,24 @@ sql/
    ```bash
    npm install
    ```
-2. Crie o banco de dados no MySQL executando `sql/create_database.sql`
-   (via `mysql -u root -p < sql/create_database.sql` ou colando no MySQL Workbench).
-3. Copie `.env.example` para `.env` e preencha com as suas credenciais do MySQL:
+2. Crie o banco de dados no PostgreSQL executando `sql/create_database.sql`
+   (via `psql -U postgres -h localhost -c "CREATE DATABASE node_api WITH ENCODING 'UTF8';"` ou colando no pgAdmin).
+3. Copie `.env.example` para `.env` e preencha com as suas credenciais do PostgreSQL:
    ```bash
    cp .env.example .env
    ```
 
 ### Variáveis de ambiente (`.env`)
 
-| Variável       | Descrição                                   | Padrão      |
-|----------------|----------------------------------------------|-------------|
-| `SERVER_PORT`  | Porta em que a API sobe                       | `8080`      |
-| `DB_DIALECT`   | Dialeto do banco (`mysql`, `mariadb`, `postgres`, `mongodb`, ...) | `mysql` |
-| `DB_HOST`      | Host do banco de dados                        | `localhost` |
-| `DB_PORT`      | Porta do banco de dados                       | `3306`      |
-| `DB_USERNAME`  | Usuário do banco                              | `root`      |
-| `DB_PASSWORD`  | Senha do usuário do banco                     | —           |
-| `DB_DATABASE`  | Nome do banco de dados                        | `node_api`  |
+| Variável       | Descrição                                   | Padrão       |
+|----------------|----------------------------------------------|--------------|
+| `SERVER_PORT`  | Porta em que a API sobe                       | `8080`       |
+| `DB_DIALECT`   | Dialeto do banco (`postgres`, `mysql`, `mariadb`, `mongodb`, ...) | `postgres` |
+| `DB_HOST`      | Host do banco de dados                        | `localhost`  |
+| `DB_PORT`      | Porta do banco de dados                       | `5432`       |
+| `DB_USERNAME`  | Usuário do banco                              | `postgres`   |
+| `DB_PASSWORD`  | Senha do usuário do banco                     | —            |
+| `DB_DATABASE`  | Nome do banco de dados                        | `node_api`   |
 
 > O arquivo `.env` não deve ser commitado (já está no `.gitignore`). Use o `.env.example`
 > como modelo para quem for clonar o projeto.

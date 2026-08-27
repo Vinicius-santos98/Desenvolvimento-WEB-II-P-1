@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config(); // carregar variáveis de ambiente do arquivo .env
+dotenv.config({ quiet: true }); // carregar variáveis de ambiente do arquivo .env
 
 import express from 'express';
 import login from './controllers/login';

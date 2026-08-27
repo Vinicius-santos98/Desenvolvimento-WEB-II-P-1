@@ -1,18 +1,21 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
+import { Situations } from './entity/situations';
+import { Users } from './entity/users';
 
-// Dialeto do banco de dados (mysql, mariadb, postgres, mongodb...) vindo do .env,
-// com "mysql" como padrão caso a variável não esteja definida.
-const dbDialect = process.env.DB_DIALECT || 'mysql';
+// Dialeto do banco de dados (postgres, mysql, mariadb, mongodb...) vindo do .env,
+// com "postgres" como padrão caso a variável não esteja definida.
+const dbDialect = process.env.DB_DIALECT || 'postgres';
 
 export const AppDataSource = new DataSource({
   type: dbDialect as any,
   host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT) || 3306,
-  username: process.env.DB_USERNAME || 'root',
+  port: Number(process.env.DB_PORT) || 5432,
+  username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_DATABASE || 'node_api',
   synchronize: false,
   logging: true,
-  entities: [],
+  entities: [Situations, Users],
+  migrations: ['dist/migration/*.js'],
 });
