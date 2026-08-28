@@ -17,6 +17,12 @@ src/
   data-source.ts         -> configuração da conexão TypeORM (lê variáveis de ambiente)
   controllers/
     login.ts              -> rotas e inicialização da conexão com o banco
+  entity/
+    situations.ts          -> entidade Situations (1 situação -> muitos usuários)
+    users.ts               -> entidade Users (muitos usuários -> 1 situação)
+  migration/
+    *-CreateSituations.ts   -> cria a tabela "situations"
+    *-CreateUsers.ts        -> cria a tabela "users" + FK para "situations"
 sql/
   create_database.sql    -> script para criar o banco "node_api" no PostgreSQL
 ```
@@ -66,7 +72,23 @@ npm run start:watch
 
 E acesse [http://localhost:8080](http://localhost:8080).
 
+## Migrations
+
+As tabelas do banco são criadas/alteradas via **migrations** do TypeORM (nunca com
+`synchronize: true`), para que qualquer pessoa que clonar o projeto consiga recriar o
+banco de dados exatamente igual, só rodando um comando.
+
+| Comando | O que faz |
+|---|---|
+| `npx typeorm migration:create src/migration/NomeDaMigration` | Gera um novo arquivo de migration vazio (`up`/`down`) |
+| `npm run build && npx typeorm migration:run -d dist/data-source.js` | Compila e aplica todas as migrations pendentes no banco |
+| `npx typeorm migration:revert -d dist/data-source.js` | Desfaz a última migration aplicada (roda o `down`) |
+| `npx typeorm query "SELECT table_name FROM information_schema.tables WHERE table_schema='public'" -d dist/data-source.js` | Lista as tabelas existentes (útil pra conferir) |
+
+Migrations já criadas: `CreateSituations` (tabela `situations`) e `CreateUsers` (tabela
+`users`, com a chave estrangeira `situation_id` → `situations.id`, `ON DELETE CASCADE`).
+
 ## Próximos passos
 
-Na próxima aula: criação das entidades/rotas da API de fato, com persistência de dados no
-banco via TypeORM.
+Próxima aula: criação das rotas/CRUD da API de fato, usando os `Repository` do TypeORM
+sobre as entidades `Situations` e `Users` para ler e gravar dados no banco.

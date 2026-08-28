@@ -1,4 +1,7 @@
 import 'reflect-metadata';
+import dotenv from 'dotenv';
+dotenv.config({ quiet: true }); // carregar variáveis de ambiente do .env
+
 import { DataSource } from 'typeorm';
 import { Situations } from './entity/situations';
 import { Users } from './entity/users';
