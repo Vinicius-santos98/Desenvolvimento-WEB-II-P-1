@@ -16,7 +16,8 @@ src/
   index.ts               -> ponto de entrada: cria o app Express e sobe o servidor
   data-source.ts         -> configuração da conexão TypeORM (lê variáveis de ambiente)
   controllers/
-    login.ts              -> rotas e inicialização da conexão com o banco
+    auth.ts                -> rota de boas-vindas ("/")
+    situations.ts           -> CRUD de situações ("/situations")
   entity/
     situations.ts          -> entidade Situations (1 situação -> muitos usuários)
     users.ts               -> entidade Users (muitos usuários -> 1 situação)
@@ -88,7 +89,26 @@ banco de dados exatamente igual, só rodando um comando.
 Migrations já criadas: `CreateSituations` (tabela `situations`) e `CreateUsers` (tabela
 `users`, com a chave estrangeira `situation_id` → `situations.id`, `ON DELETE CASCADE`).
 
+## Rotas da API
+
+### Auth (`/`)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/` | Rota de boas-vindas (placeholder) |
+
+### Situations (`/situations`)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/situations` | Lista todas as situações |
+| GET | `/situations/view/:id` | Retorna uma situação específica (404 se não existir) |
+| POST | `/situations` | Cadastra uma nova situação — body: `{ "name_situation": "ativo" }` (nome precisa ser único) |
+
+> Teste as rotas com o [Postman](https://www.postman.com/) ou `curl`. Lembre-se que o
+> `POST` exige o header `Content-Type: application/json`.
+
 ## Próximos passos
 
-Próxima aula: criação das rotas/CRUD da API de fato, usando os `Repository` do TypeORM
-sobre as entidades `Situations` e `Users` para ler e gravar dados no banco.
+Próxima aula: rotas de **update** e **delete** para completar o CRUD, e o CRUD da
+entidade `Users`.
