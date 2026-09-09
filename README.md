@@ -24,6 +24,9 @@ src/
   migration/
     *-CreateSituations.ts   -> cria a tabela "situations"
     *-CreateUsers.ts        -> cria a tabela "users" + FK para "situations"
+  seeds/
+    create-situations-seeds.ts -> dados padrão da tabela "situations"
+  run-seeds.ts           -> executor dos seeds (conecta, roda, encerra a conexão)
 sql/
   create_database.sql    -> script para criar o banco "node_api" no PostgreSQL
 ```
@@ -62,6 +65,7 @@ sql/
 |-----------------------|------------------------------------------------------------------------|
 | `npm run build`       | Compila o TypeScript (`src`) para JavaScript (`dist`)                 |
 | `npm start`           | Executa o projeto já compilado (`dist/index.js`)                      |
+| `npm run seed`        | Popula o banco com os dados padrão (`dist/run-seeds.js`)              |
 | `npm run watch`       | Compila em modo observador, recompilando a cada alteração             |
 | `npm run start:watch` | Roda o observador do TypeScript **e** reinicia o servidor automaticamente a cada mudança (usa `concurrently`) |
 
@@ -104,11 +108,40 @@ Migrations já criadas: `CreateSituations` (tabela `situations`) e `CreateUsers`
 | GET | `/situations` | Lista todas as situações |
 | GET | `/situations/view/:id` | Retorna uma situação específica (404 se não existir) |
 | POST | `/situations` | Cadastra uma nova situação — body: `{ "name_situation": "ativo" }` (nome precisa ser único) |
+| PUT | `/situations/edit/:id` | Atualiza uma situação — body: `{ "name_situation": "inativo" }` (404 se não existir) |
+| DELETE | `/situations/delete/:id` | Remove uma situação (404 se não existir) |
 
 > Teste as rotas com o [Postman](https://www.postman.com/) ou `curl`. Lembre-se que o
 > `POST` exige o header `Content-Type: application/json`.
 
+## Seeds
+
+Seeds cadastram **dados padrão** no banco, para que quem clonar o projeto já tenha
+registros para testar sem precisar adivinhar o que cadastrar.
+
+```bash
+npm run build && npm run seed     # ou: node dist/run-seeds.js
+```
+
+O seed de `situations` cadastra `ativo`, `inativo` e `pendente`. Ele é **idempotente**:
+se a tabela já tiver registros, não faz nada (evita duplicar dados).
+
+Para criar um novo seed: adicione o arquivo em `src/seeds/`, e no `src/run-seeds.ts`
+basta instanciar a classe e chamar `.run(AppDataSource)` junto dos demais.
+
+### Ordem de setup do projeto do zero
+
+```bash
+npm install                                            # 1. dependências
+psql -U postgres -c "CREATE DATABASE node_api ..."     # 2. cria o banco
+cp .env.example .env                                   # 3. configura credenciais
+npm run build                                          # 4. compila
+npx typeorm migration:run -d dist/data-source.js       # 5. cria as tabelas
+npm run seed                                           # 6. popula os dados padrão
+npm run start:watch                                    # 7. sobe a API
+```
+
 ## Próximos passos
 
-Próxima aula: rotas de **update** e **delete** para completar o CRUD, e o CRUD da
-entidade `Users`.
+CRUD de `Situations` completo (create, list, view, edit, delete) + seeds. Próximo:
+o CRUD da entidade `Users`, incluindo o relacionamento com `Situations`.

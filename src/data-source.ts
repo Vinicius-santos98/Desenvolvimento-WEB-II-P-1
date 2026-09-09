@@ -22,12 +22,3 @@ export const AppDataSource = new DataSource({
   entities: [Situations, Users],
   migrations: ['dist/migration/*.js'],
 });
-
-// Inicializar a conexão com o banco de dados
-AppDataSource.initialize()
-  .then(() => {
-    console.log('Conexão com o banco de dados realizado com sucesso');
-  })
-  .catch((error) => {
-    console.log('Erro na conexão com o banco de dados', error);
-  });
