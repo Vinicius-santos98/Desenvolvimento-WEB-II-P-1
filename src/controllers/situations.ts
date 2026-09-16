@@ -1,18 +1,30 @@
 import { Router, Request, Response } from 'express';
 import { AppDataSource } from '../data-source';
 import { Situations } from '../entity/situations';
+import { PaginationService } from '../services/pagination.service';
 
 const router = Router();
 
-// Listar todas as situações
+// Listar todas as situações (paginado)
 router.get('/', async (request: Request, response: Response) => {
   try {
     const situationRepository = AppDataSource.getRepository(Situations);
-    const situations = await situationRepository.find();
 
-    return response.status(200).json(situations);
+    // recebe a página e o limite de registros pela URL (?page=1&limit=10)
+    const page = Number(request.query.page) || 1;
+    const limit = Number(request.query.limit) || 10;
+
+    // usa o serviço de paginação
+    const result = await PaginationService.paginate(situationRepository, page, limit, {
+      id: 'DESC',
+    });
+
+    return response.status(200).json(result);
   } catch (error) {
-    return response.status(500).json({ message: 'Erro ao listar situação', error });
+    return response.status(500).json({
+      message: 'Erro ao listar situação',
+      error: error instanceof Error ? error.message : error,
+    });
   }
 });
 

@@ -26,6 +26,8 @@ src/
     *-CreateUsers.ts        -> cria a tabela "users" + FK para "situations"
   seeds/
     create-situations-seeds.ts -> dados padrão da tabela "situations"
+  services/
+    pagination.service.ts   -> serviço genérico de paginação (reutilizável)
   run-seeds.ts           -> executor dos seeds (conecta, roda, encerra a conexão)
 sql/
   create_database.sql    -> script para criar o banco "node_api" no PostgreSQL
@@ -105,7 +107,7 @@ Migrations já criadas: `CreateSituations` (tabela `situations`) e `CreateUsers`
 
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/situations` | Lista todas as situações |
+| GET | `/situations?page=1&limit=10` | Lista as situações **paginadas** (ordenadas por `id` DESC), via `PaginationService`. `limit` padrão: 10. Retorna `error`, `data`, `currentPage`, `lastPage` e `totalRecords` |
 | GET | `/situations/view/:id` | Retorna uma situação específica (404 se não existir) |
 | POST | `/situations` | Cadastra uma nova situação — body: `{ "name_situation": "ativo" }` (nome precisa ser único) |
 | PUT | `/situations/edit/:id` | Atualiza uma situação — body: `{ "name_situation": "inativo" }` (404 se não existir) |
@@ -141,7 +143,30 @@ npm run seed                                           # 6. popula os dados padr
 npm run start:watch                                    # 7. sobe a API
 ```
 
+## Paginação
+
+A paginação vive em `src/services/pagination.service.ts` e serve **qualquer** repositório
+do TypeORM — não precisa reescrever a lógica em cada listagem:
+
+```ts
+const result = await PaginationService.paginate(situationRepository, page, limit, {
+  id: 'DESC',
+});
+```
+
+| Parâmetro | Descrição | Padrão |
+|---|---|---|
+| `repository` | Repositório da entidade a paginar | — |
+| `page` | Página solicitada | `1` |
+| `limit` | Registros por página | `10` |
+| `order` | Ordenação (`FindOptionsOrder`) | `{}` |
+
+Retorna `{ error, data, currentPage, lastPage, totalRecords }`. Se a página pedida não
+existir, lança um `Error` com a mensagem do total de páginas — trate no `try/catch` do
+controller.
+
 ## Próximos passos
 
-CRUD de `Situations` completo (create, list, view, edit, delete) + seeds. Próximo:
-o CRUD da entidade `Users`, incluindo o relacionamento com `Situations`.
+CRUD de `Situations` completo (create, list, view, edit, delete) + seeds + paginação
+reutilizável. Próximo: aplicar o mesmo padrão ao CRUD da entidade `Users`, incluindo o
+relacionamento com `Situations`.
