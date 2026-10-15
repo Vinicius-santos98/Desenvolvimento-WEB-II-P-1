@@ -1,5 +1,8 @@
 import { FindOptionsOrder, ObjectLiteral, Repository } from 'typeorm';
 
+// Erro de paginação (página inexistente): é erro do cliente, não falha do servidor
+export class PaginationError extends Error {}
+
 // Resultado genérico da paginação
 export interface PaginationResult<T> {
   error: boolean;
@@ -17,23 +20,27 @@ export class PaginationService {
     limit: number = 10,
     order: FindOptionsOrder<T> = {},
   ): Promise<PaginationResult<T>> {
+    // normaliza os valores recebidos (evita página/limite negativo, zero ou absurdo)
+    const currentPage = Math.max(1, Math.floor(Number(page) || 1));
+    const perPage = Math.min(100, Math.max(1, Math.floor(Number(limit) || 10)));
+
     // conta o total de registros no banco de dados
     const totalRecords = await repository.count();
 
     // calcula o número da última página
-    const lastPage = Math.ceil(totalRecords / limit);
+    const lastPage = Math.ceil(totalRecords / perPage);
 
     // verifica se a página solicitada é válida
-    if (page > lastPage && lastPage > 0) {
-      throw new Error(`Página inválida. O total de páginas é ${lastPage}`);
+    if (currentPage > lastPage && lastPage > 0) {
+      throw new PaginationError(`Página inválida. O total de páginas é ${lastPage}`);
     }
 
     // calcula a partir de qual registro começa a busca
-    const offset = (page - 1) * limit;
+    const offset = (currentPage - 1) * perPage;
 
     // busca os registros já paginados
     const data = await repository.find({
-      take: limit,
+      take: perPage,
       skip: offset,
       order,
     });
@@ -41,7 +48,7 @@ export class PaginationService {
     return {
       error: false,
       data,
-      currentPage: page,
+      currentPage,
       lastPage,
       totalRecords,
     };

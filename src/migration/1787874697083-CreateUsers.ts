@@ -17,25 +17,27 @@ export class CreateUsers1787874697083 implements MigrationInterface {
                     {
                         name: 'name',
                         type: 'varchar',
+                        length: '255',
                     },
                     {
                         name: 'email',
                         type: 'varchar',
+                        length: '255',
                         isUnique: true,
                     },
                     {
-                        name: 'created',
-                        type: 'timestamp',
-                        default: 'CURRENT_TIMESTAMP',
-                    },
-                    {
-                        name: 'updated',
-                        type: 'timestamp',
-                        default: 'CURRENT_TIMESTAMP',
-                    },
-                    {
-                        name: 'situation_id',
+                        name: 'situationId',
                         type: 'int',
+                    },
+                    {
+                        name: 'createdAt',
+                        type: 'timestamp',
+                        default: 'CURRENT_TIMESTAMP',
+                    },
+                    {
+                        name: 'updatedAt',
+                        type: 'timestamp',
+                        default: 'CURRENT_TIMESTAMP',
                     },
                 ],
             }),
@@ -45,7 +47,7 @@ export class CreateUsers1787874697083 implements MigrationInterface {
         await queryRunner.createForeignKey(
             'users',
             new TableForeignKey({
-                columnNames: ['situation_id'],
+                columnNames: ['situationId'],
                 referencedColumnNames: ['id'],
                 referencedTableName: 'situations',
                 onDelete: 'CASCADE',
@@ -56,7 +58,7 @@ export class CreateUsers1787874697083 implements MigrationInterface {
     public async down(queryRunner: QueryRunner): Promise<void> {
         const table = await queryRunner.getTable('users');
         const foreignKey = table?.foreignKeys.find(
-            (fk) => fk.columnNames.indexOf('situation_id') !== -1,
+            (fk) => fk.columnNames.indexOf('situationId') !== -1,
         );
 
         if (foreignKey) {

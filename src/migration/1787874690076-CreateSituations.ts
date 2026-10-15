@@ -15,17 +15,18 @@ export class CreateSituations1787874690076 implements MigrationInterface {
                         generationStrategy: 'increment',
                     },
                     {
-                        name: 'name_situation',
+                        name: 'nameSituation',
                         type: 'varchar',
+                        length: '255',
                         isUnique: true,
                     },
                     {
-                        name: 'created',
+                        name: 'createdAt',
                         type: 'timestamp',
                         default: 'CURRENT_TIMESTAMP',
                     },
                     {
-                        name: 'updated',
+                        name: 'updatedAt',
                         type: 'timestamp',
                         default: 'CURRENT_TIMESTAMP',
                     },

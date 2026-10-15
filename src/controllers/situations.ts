@@ -2,8 +2,13 @@ import { Router, Request, Response } from 'express';
 import { AppDataSource } from '../data-source';
 import { Situations } from '../entity/situations';
 import { PaginationService } from '../services/pagination.service';
+import { handleError } from '../services/error.service';
+import { parseId, pickFields, requireFields } from '../services/validation.service';
 
 const router = Router();
+
+// campos aceitos no corpo da requisição
+const FIELDS: (keyof Situations & string)[] = ['nameSituation'];
 
 // Listar todas as situações (paginado)
 router.get('/', async (request: Request, response: Response) => {
@@ -21,19 +26,21 @@ router.get('/', async (request: Request, response: Response) => {
 
     return response.status(200).json(result);
   } catch (error) {
-    return response.status(500).json({
-      message: 'Erro ao listar situação',
-      error: error instanceof Error ? error.message : error,
-    });
+    return handleError(response, error, 'Erro ao listar situação');
   }
 });
 
 // Visualizar uma situação específica pelo ID
 router.get('/view/:id', async (request: Request, response: Response) => {
   try {
-    const id = String(request.params.id);
+    const id = parseId(request.params.id);
+
+    if (id === null) {
+      return response.status(400).json({ message: 'ID inválido' });
+    }
+
     const situationRepository = AppDataSource.getRepository(Situations);
-    const situation = await situationRepository.findOneBy({ id: parseInt(id) });
+    const situation = await situationRepository.findOneBy({ id });
 
     if (!situation) {
       return response.status(404).json({ message: 'Situação não encontrada' });
@@ -41,14 +48,22 @@ router.get('/view/:id', async (request: Request, response: Response) => {
 
     return response.status(200).json(situation);
   } catch (error) {
-    return response.status(500).json({ message: 'Erro ao buscar situação', error });
+    return handleError(response, error, 'Erro ao buscar situação');
   }
 });
 
 // Cadastrar uma nova situação
 router.post('/', async (request: Request, response: Response) => {
   try {
-    const data = request.body;
+    // aceita apenas os campos permitidos (nunca o id enviado pelo cliente)
+    const data = pickFields<Situations>(request.body, FIELDS);
+
+    const missing = requireFields(data, ['nameSituation']);
+
+    if (missing) {
+      return response.status(400).json({ message: missing });
+    }
+
     const situationRepository = AppDataSource.getRepository(Situations);
     const newSituation = situationRepository.create(data);
 
@@ -59,17 +74,22 @@ router.post('/', async (request: Request, response: Response) => {
       situation: newSituation,
     });
   } catch (error) {
-    return response.status(500).json({ message: 'Erro ao cadastrar situação', error });
+    return handleError(response, error, 'Erro ao cadastrar situação');
   }
 });
 
 // Atualizar uma situação já cadastrada
 router.put('/edit/:id', async (request: Request, response: Response) => {
   try {
-    const id = String(request.params.id);
-    const data = request.body;
+    const id = parseId(request.params.id);
+
+    if (id === null) {
+      return response.status(400).json({ message: 'ID inválido' });
+    }
+
+    const data = pickFields<Situations>(request.body, FIELDS);
     const situationRepository = AppDataSource.getRepository(Situations);
-    const situation = await situationRepository.findOneBy({ id: parseInt(id) });
+    const situation = await situationRepository.findOneBy({ id });
 
     if (!situation) {
       return response.status(404).json({ message: 'Situação não encontrada' });
@@ -86,16 +106,21 @@ router.put('/edit/:id', async (request: Request, response: Response) => {
       situation: updateSituation,
     });
   } catch (error) {
-    return response.status(500).json({ message: 'Erro ao atualizar situação', error });
+    return handleError(response, error, 'Erro ao atualizar situação');
   }
 });
 
 // Remover uma situação cadastrada no banco de dados
 router.delete('/delete/:id', async (request: Request, response: Response) => {
   try {
-    const id = String(request.params.id);
+    const id = parseId(request.params.id);
+
+    if (id === null) {
+      return response.status(400).json({ message: 'ID inválido' });
+    }
+
     const situationRepository = AppDataSource.getRepository(Situations);
-    const situation = await situationRepository.findOneBy({ id: parseInt(id) });
+    const situation = await situationRepository.findOneBy({ id });
 
     if (!situation) {
       return response.status(404).json({ message: 'Situação não encontrada' });
@@ -106,7 +131,7 @@ router.delete('/delete/:id', async (request: Request, response: Response) => {
 
     return response.status(200).json({ message: 'Situação removida com sucesso' });
   } catch (error) {
-    return response.status(500).json({ message: 'Erro ao remover situação', error });
+    return handleError(response, error, 'Erro ao remover situação');
   }
 });
 

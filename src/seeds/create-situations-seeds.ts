@@ -18,9 +18,9 @@ export default class CreateSituationsSeeds {
 
     // registros padrão
     const situations = [
-      { name_situation: 'ativo' },
-      { name_situation: 'inativo' },
-      { name_situation: 'pendente' },
+      { nameSituation: 'ativo' },
+      { nameSituation: 'inativo' },
+      { nameSituation: 'pendente' },
     ];
 
     await situationRepository.save(situations);
