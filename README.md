@@ -15,6 +15,7 @@ o diagrama entidade-relacionamento do Projeto P1.
 | Controllers | `src/controllers/`, registrados em `src/index.ts` |
 | Seeds | `src/seeds/` (3 seeds), executados por `src/run-seeds.ts` |
 | Services (Pagination) | `src/services/pagination.service.ts`, usado nas 5 listagens |
+| Testes | `postman/` — collection com 33 requisições e 65 asserções (ver [Testes](#testes-postman)) |
 
 ## Requisitos
 
@@ -68,6 +69,8 @@ src/
     error.service.ts         -> tratamento seguro de erro (sem expor SQL na resposta)
 sql/
   create_database.sql        -> script para criar o banco "node_api"
+postman/
+  API P1 — Baião.postman_collection.json -> 33 requisições com testes automatizados
 ```
 
 ## Configuração
@@ -236,3 +239,33 @@ existir, lança um `Error` com o total de páginas, tratado no `catch` do contro
 > **Consultando no pgAdmin:** como os nomes das colunas são camelCase, o PostgreSQL exige
 > aspas duplas nas consultas manuais:
 > `SELECT "nameSituation" FROM situations;`
+
+## Testes (Postman)
+
+A pasta `postman/` traz uma collection com **33 requisições e 65 asserções automatizadas**,
+cobrindo o CRUD completo dos 5 recursos e 7 casos de erro (404, 400 de validação, FK
+inexistente, valor único duplicado, página inválida e tentativa de sobrescrita via `id`).
+
+### Como rodar
+
+1. Suba a API com o banco migrado e populado (passos 1 a 7 do [setup](#ordem-de-setup-do-projeto-do-zero))
+2. No Postman: **Import** → selecione o arquivo `.json` da pasta `postman/`
+3. Na collection, clique em **Run** → **Run API P1 — Baião**
+
+O resultado esperado é **65 de 65 asserções aprovadas**. Também dá para rodar sem abrir o
+Postman, pelo terminal:
+
+```bash
+npx newman run "postman/API P1 — Baião.postman_collection.json"
+```
+
+### Por que ela pode ser executada várias vezes
+
+Cada `POST` guarda o `id` do registro criado numa variável da collection
+(`createdSituationId`, `createdUserId`, ...), e as requisições seguintes da pasta usam essa
+variável em vez de um número fixo. O `DELETE` no fim de cada pasta remove o que foi criado,
+então o banco volta ao estado do seed ao final de cada execução — não é preciso resetar nada
+entre uma rodada e outra.
+
+A variável `host` vem preenchida com `http://localhost:8080`. Se a API estiver em outra porta,
+altere só ela, na aba **Variables** da collection.
