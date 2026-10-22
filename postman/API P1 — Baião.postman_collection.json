@@ -1,0 +1,813 @@
+{
+  "info": {
+    "_postman_id": "35e70035-c2f8-4aac-aa82-a2a4914048dd",
+    "name": "API P1 — Baião",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "45420361",
+    "_collection_link": "https://go.postman.co/collection/45420361-35e70035-c2f8-4aac-aa82-a2a4914048dd?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "00 - Geral",
+      "item": [
+        {
+          "name": "Bem vindo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 - Situations",
+      "item": [
+        {
+          "name": "Cadastrar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"nameSituation\": \"em análise\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/situations",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "situations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar paginado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/situations?page=1&limit=2",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "situations"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Visualizar por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/situations/view/4",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "situations",
+                "view",
+                "4"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"nameSituation\": \"em análise - revisado\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/situations/edit/4",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "situations",
+                "edit",
+                "4"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/situations/delete/4",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "situations",
+                "delete",
+                "4"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - Users",
+      "item": [
+        {
+          "name": "Cadastrar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Vinicius Santos\",\r\n  \"email\": \"vinicius@teste.com\",\r\n  \"situationId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/users",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar paginando",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/users",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "visualizar por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/users/view/1",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "users",
+                "view",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"Vinicius S. Santos\", \"situationId\": 2 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/users/edit/1",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "users",
+                "edit",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/users/delete/1\n",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "users",
+                "delete",
+                "1\n"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - Product Categories",
+      "item": [
+        {
+          "name": "Cadastrar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"informática\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/product-categories",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "product-categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar paginando",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/product-categories",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "product-categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Visualizar por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/product-categories/view/1",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "product-categories",
+                "view",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"informática e games\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/product-categories/edit/5",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "product-categories",
+                "edit",
+                "5"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/product-categories/delete/5",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "product-categories",
+                "delete",
+                "5"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 - Product Situations",
+      "item": [
+        {
+          "name": "Cadastrar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"pré-venda\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/product-situations",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "product-situations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar paginando",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/product-situations",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "product-situations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Visualizar por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/product-situations/view/1",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "product-situations",
+                "view",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"pré-venda encerrada\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/product-situations/edit/4",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "product-situations",
+                "edit",
+                "4"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/product-situations/delete/4",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "product-situations",
+                "delete",
+                "4"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 - Products",
+      "item": [
+        {
+          "name": "Cadastrar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Notebook Dell Inspiron\",\r\n  \"productCategoryId\": 1,\r\n  \"productSituationId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/products",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar paginando",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/products",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Visualizar por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/products/view/1",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "products",
+                "view",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"Notebook Dell Inspiron 15\", \"productSituationId\": 2 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/products/edit/1",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "products",
+                "edit",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/products/delete/1",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "products",
+                "delete",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 - Casos de erro",
+      "item": [
+        {
+          "name": "404 ID inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/situations/view/9999",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "situations",
+                "view",
+                "9999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 ID não numérico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/situations/view/abc",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "situations",
+                "view",
+                "abc"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Campo obrigatório faltando",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"Sem situação\", \"email\": \"sem@teste.com\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/users",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 FK inexistente",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"FK inválida\", \"email\": \"fk@teste.com\", \"situationId\": 9999 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/users",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 Valor único duplicado",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": \"livros\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/product-categories",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "product-categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "400 Página inválida",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/situations?page=99",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "situations"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "99"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "201 ID no body é ignorado",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"id\": 1, \"name\": \"tentativa de sobrescrita\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/product-categories",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "product-categories"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "host",
+      "value": ""
+    }
+  ]
+}
