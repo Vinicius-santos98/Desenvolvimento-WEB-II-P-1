@@ -42,6 +42,43 @@
               }
             }
           ]
+        },
+        {
+          "name": "Teste conexão",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 - API no ar\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Mensagem de conexão\", function () {",
+                  "    pm.expect(pm.response.json().message).to.eql(\"Conexão com API realizada com sucesso\");",
+                  "});",
+                  "// cabeçalho que libera o acesso de front-ends em outros endereços (CORS)",
+                  "pm.test(\"CORS liberado (Access-Control-Allow-Origin)\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.eql(\"*\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/test-connection",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "test-connection"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },

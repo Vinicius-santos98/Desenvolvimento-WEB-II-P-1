@@ -1,6 +1,6 @@
 # Baião P1 — API Node.js + TypeScript
 
-API REST desenvolvida com **Node.js, Express, TypeScript, PostgreSQL e TypeORM**, seguindo
+API REST desenvolvida com **Node.js, Express, TypeScript, PostgreSQL, TypeORM e Yup**, seguindo
 o diagrama entidade-relacionamento do Projeto P1.
 
 ## Itens da avaliação
@@ -15,7 +15,7 @@ o diagrama entidade-relacionamento do Projeto P1.
 | Controllers | `src/controllers/`, registrados em `src/index.ts` |
 | Seeds | `src/seeds/` (3 seeds), executados por `src/run-seeds.ts` |
 | Services (Pagination) | `src/services/pagination.service.ts`, usado nas 5 listagens |
-| Testes | `postman/` — collection com 33 requisições e 65 asserções (ver [Testes](#testes-postman)) |
+| Testes | `postman/` — collection com 34 requisições e 68 asserções (ver [Testes](#testes-postman)) |
 
 ## Requisitos
 
@@ -50,6 +50,7 @@ src/
   run-seeds.ts             -> executor dos seeds (conecta, roda, encerra a conexão)
   controllers/
     auth.ts                  -> rota de boas-vindas ("/")
+    test-connection.ts       -> rota de teste de conexão ("/test-connection")
     situations.ts            -> CRUD de situações
     users.ts                 -> CRUD de usuários
     product-categories.ts    -> CRUD de categorias de produto
@@ -70,7 +71,7 @@ src/
 sql/
   create_database.sql        -> script para criar o banco "node_api"
 postman/
-  API P1 — Baião.postman_collection.json -> 33 requisições com testes automatizados
+  API P1 — Baião.postman_collection.json -> 34 requisições com testes automatizados
 ```
 
 ## Configuração
@@ -162,7 +163,17 @@ Todas as entidades seguem o mesmo padrão de CRUD. Substitua `{recurso}` por
 | PUT | `/{recurso}/edit/:id` | Atualiza um registro (404 se não existir) |
 | DELETE | `/{recurso}/delete/:id` | Remove um registro (404 se não existir) |
 
-Além dessas, `GET /` devolve a mensagem de boas-vindas.
+Além dessas, `GET /` devolve a mensagem de boas-vindas e `GET /test-connection` devolve
+`{ "message": "Conexão com API realizada com sucesso" }` — útil para confirmar que a API está
+no ar depois de publicar num servidor.
+
+### Requisições externas (CORS)
+
+O middleware `cors` está ativo em todas as rotas, então front-ends hospedados em outros
+endereços conseguem consumir a API pelo navegador. Ele responde com
+`Access-Control-Allow-Origin: *` e atende o *preflight* (`OPTIONS`) que o navegador faz antes
+de um `POST`/`PUT` com JSON. Ferramentas como Postman e cURL não dependem disso — o CORS é
+uma regra aplicada pelo navegador.
 
 ### Corpo das requisições (POST / PUT)
 
@@ -187,10 +198,12 @@ Além dessas, `GET /` devolve a mensagem de boas-vindas.
 | Situação | Resposta |
 |---|---|
 | Campo obrigatório ausente ou vazio | **400** com a lista de campos faltando |
+| `nameSituation` vazio ou com menos de 3 caracteres (cadastro e edição de situações, validado com **Yup**) | **400** com a lista de todas as regras violadas |
 | ID da rota não numérico (`/view/abc`) | **400** `ID inválido` |
 | Registro não encontrado | **404** |
 | Chave estrangeira inexistente (`situationId`, `productCategoryId`, `productSituationId`) | **400** com mensagem explicativa |
 | Valor único repetido (`email`, `nameSituation`, `name`) | **400** |
+| Nome de situação já cadastrado (verificado antes de gravar; na edição o próprio registro é ignorado) | **400** `Já existe uma situação cadastrada com esse nome` |
 | Página inexistente na paginação | **400** com o total de páginas |
 | Falha inesperada | **500** com mensagem genérica (o erro completo vai só para o log do servidor) |
 
@@ -242,7 +255,7 @@ existir, lança um `Error` com o total de páginas, tratado no `catch` do contro
 
 ## Testes (Postman)
 
-A pasta `postman/` traz uma collection com **33 requisições e 65 asserções automatizadas**,
+A pasta `postman/` traz uma collection com **34 requisições e 68 asserções automatizadas**,
 cobrindo o CRUD completo dos 5 recursos e 7 casos de erro (404, 400 de validação, FK
 inexistente, valor único duplicado, página inválida e tentativa de sobrescrita via `id`).
 
@@ -252,7 +265,7 @@ inexistente, valor único duplicado, página inválida e tentativa de sobrescrit
 2. No Postman: **Import** → selecione o arquivo `.json` da pasta `postman/`
 3. Na collection, clique em **Run** → **Run API P1 — Baião**
 
-O resultado esperado é **65 de 65 asserções aprovadas**. Também dá para rodar sem abrir o
+O resultado esperado é **68 de 68 asserções aprovadas**. Também dá para rodar sem abrir o
 Postman, pelo terminal:
 
 ```bash
