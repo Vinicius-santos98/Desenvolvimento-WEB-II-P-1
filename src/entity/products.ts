@@ -18,6 +18,26 @@ export class Products {
   @Column({ type: 'varchar', length: 255 })
   name!: string;
 
+  // gerado automaticamente a partir do nome, ex.: "Notebook Dell" -> "notebook-dell"
+  @Column({ type: 'varchar', length: 255, unique: true })
+  slug!: string;
+
+  @Column({ type: 'text' })
+  description!: string;
+
+  // o PostgreSQL devolve decimal como texto ("4299.90"); o transformer converte para
+  // número, para a API responder price: 4299.9 em vez de uma string
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
+  price!: number;
+
   @Column()
   productSituationId!: number;
 

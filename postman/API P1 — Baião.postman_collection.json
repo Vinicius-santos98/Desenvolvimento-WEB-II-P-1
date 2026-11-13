@@ -308,7 +308,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"name\": \"Vinicius Santos\",\r\n  \"email\": \"vinicius@teste.com\",\r\n  \"situationId\": 1\r\n}",
+              "raw": "{\n  \"name\": \"Vinicius Santos\",\n  \"email\": \"vinicius@teste.com\",\n  \"password\": \"123456\",\n  \"situationId\": 1\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -340,7 +340,10 @@
                   "    pm.expect(json.user.id).to.be.a(\"number\");",
                   "});",
                   "// guarda o id criado: as próximas requisições da pasta usam {{createdUserId}}",
-                  "pm.collectionVariables.set(\"createdUserId\", json.user.id);"
+                  "pm.collectionVariables.set(\"createdUserId\", json.user.id);",
+                  "pm.test(\"A senha não é devolvida na resposta\", function () {",
+                  "    pm.expect(pm.response.json().user).to.not.have.property(\"password\");",
+                  "});"
                 ]
               }
             }
@@ -377,6 +380,9 @@
                   "    pm.expect(json.currentPage).to.be.a(\"number\");",
                   "    pm.expect(json.lastPage).to.be.a(\"number\");",
                   "    pm.expect(json.totalRecords).to.be.a(\"number\");",
+                  "});",
+                  "pm.test(\"Nenhum usuário da lista traz a senha\", function () {",
+                  "    pm.response.json().data.forEach(function (user) { pm.expect(user).to.not.have.property(\"password\"); });",
                   "});"
                 ]
               }
@@ -389,13 +395,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{host}}/users/view/{{createdUserId}}",
+              "raw": "{{host}}/users/{{createdUserId}}",
               "host": [
                 "{{host}}"
               ],
               "path": [
                 "users",
-                "view",
                 "{{createdUserId}}"
               ]
             }
@@ -416,6 +421,9 @@
                   "});",
                   "pm.test(\"Traz as entidades relacionadas (FK resolvida)\", function () {",
                   "    pm.expect(json.situation).to.be.an(\"object\");",
+                  "});",
+                  "pm.test(\"A senha não é devolvida\", function () {",
+                  "    pm.expect(pm.response.json()).to.not.have.property(\"password\");",
                   "});"
                 ]
               }
@@ -429,7 +437,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{ \"name\": \"Vinicius S. Santos\", \"situationId\": 2 }",
+              "raw": "{\n  \"name\": \"Vinicius S. Santos\",\n  \"email\": \"vinicius@teste.com\",\n  \"situationId\": 2\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -437,13 +445,12 @@
               }
             },
             "url": {
-              "raw": "{{host}}/users/edit/{{createdUserId}}",
+              "raw": "{{host}}/users/{{createdUserId}}",
               "host": [
                 "{{host}}"
               ],
               "path": [
                 "users",
-                "edit",
                 "{{createdUserId}}"
               ]
             }
@@ -471,18 +478,62 @@
           ]
         },
         {
-          "name": "Delete",
+          "name": "Editar senha",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 - senha atualizada\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "// a senha nova é gravada criptografada (bcrypt) e nunca volta na resposta",
+                  "pm.test(\"A senha não é devolvida na resposta\", function () {",
+                  "    pm.expect(pm.response.json().user).to.not.have.property(\"password\");",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "DELETE",
+            "method": "PATCH",
             "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"654321\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
-              "raw": "{{host}}/users/delete/{{createdUserId}}",
+              "raw": "{{host}}/users/{{createdUserId}}/password",
               "host": [
                 "{{host}}"
               ],
               "path": [
                 "users",
-                "delete",
+                "{{createdUserId}}",
+                "password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/users/{{createdUserId}}",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "users",
                 "{{createdUserId}}"
               ]
             }
@@ -920,7 +971,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"name\": \"Notebook Dell Inspiron\",\r\n  \"productCategoryId\": 1,\r\n  \"productSituationId\": 1\r\n}",
+              "raw": "{\n  \"name\": \"Notebook Dell Inspiron\",\n  \"description\": \"Notebook com 16 GB de RAM e SSD de 512 GB.\",\n  \"price\": 3999.9,\n  \"productCategoryId\": 1,\n  \"productSituationId\": 1\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -952,7 +1003,10 @@
                   "    pm.expect(json.product.id).to.be.a(\"number\");",
                   "});",
                   "// guarda o id criado: as próximas requisições da pasta usam {{createdProductId}}",
-                  "pm.collectionVariables.set(\"createdProductId\", json.product.id);"
+                  "pm.collectionVariables.set(\"createdProductId\", json.product.id);",
+                  "pm.test(\"Slug gerado a partir do nome\", function () {",
+                  "    pm.expect(pm.response.json().product.slug).to.eql(\"notebook-dell-inspiron\");",
+                  "});"
                 ]
               }
             }
@@ -1029,6 +1083,9 @@
                   "pm.test(\"Traz as entidades relacionadas (FK resolvida)\", function () {",
                   "    pm.expect(json.productCategory).to.be.an(\"object\");",
                   "    pm.expect(json.productSituation).to.be.an(\"object\");",
+                  "});",
+                  "pm.test(\"Preço vem como número\", function () {",
+                  "    pm.expect(pm.response.json().price).to.be.a(\"number\");",
                   "});"
                 ]
               }
@@ -1042,7 +1099,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{ \"name\": \"Notebook Dell Inspiron 15\", \"productSituationId\": 2 }",
+              "raw": "{\n  \"name\": \"Notebook Dell Inspiron 15\",\n  \"description\": \"Notebook com tela de 15 polegadas, 16 GB de RAM e SSD de 512 GB.\",\n  \"price\": 4299.9,\n  \"productCategoryId\": 1,\n  \"productSituationId\": 2\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1077,6 +1134,9 @@
                   "    Object.keys(sent).forEach(function (field) {",
                   "        pm.expect(saved[field]).to.eql(sent[field]);",
                   "    });",
+                  "});",
+                  "pm.test(\"Slug atualizado junto com o nome\", function () {",
+                  "    pm.expect(pm.response.json().product.slug).to.eql(\"notebook-dell-inspiron-15\");",
                   "});"
                 ]
               }
@@ -1225,7 +1285,7 @@
                   "    pm.response.to.have.status(400);",
                   "});",
                   "pm.test(\"Aponta o campo que faltou\", function () {",
-                  "    pm.expect(pm.response.json().message).to.include(\"situationId\");",
+                  "    pm.expect(pm.response.json().message).to.include(\"O campo situação é obrigatório\");",
                   "});"
                 ]
               }
@@ -1239,7 +1299,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{ \"name\": \"FK inválida\", \"email\": \"fk@teste.com\", \"situationId\": 9999 }",
+              "raw": "{\n  \"name\": \"FK inválida\",\n  \"email\": \"fk@teste.com\",\n  \"password\": \"123456\",\n  \"situationId\": 9999\n}",
               "options": {
                 "raw": {
                   "language": "json"

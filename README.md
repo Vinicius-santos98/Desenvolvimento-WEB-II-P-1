@@ -1,6 +1,6 @@
 # Baião P1 — API Node.js + TypeScript
 
-API REST desenvolvida com **Node.js, Express, TypeScript, PostgreSQL, TypeORM e Yup**, seguindo
+API REST desenvolvida com **Node.js, Express, TypeScript, PostgreSQL, TypeORM, Yup, bcryptjs e slugify**, seguindo
 o diagrama entidade-relacionamento do Projeto P1.
 
 ## Itens da avaliação
@@ -10,12 +10,12 @@ o diagrama entidade-relacionamento do Projeto P1.
 | Configuração da API | `src/index.ts`, `package.json`, `tsconfig.json` |
 | Models / Entitys | `src/entity/` (5 entidades — no TypeORM a entity é o model), registradas em `src/data-source.ts` |
 | Variáveis de Ambiente | `.env.example` + `dotenv` em `src/index.ts` e `src/data-source.ts` |
-| Migrations | `src/migration/` (5 migrations, com FKs e rollback) |
+| Migrations | `src/migration/` (8 migrations: 5 criam as tabelas com FKs e 3 alteram tabelas existentes, todas com rollback) |
 | CRUD | `src/controllers/` — as 5 operações para cada uma das 5 entidades |
 | Controllers | `src/controllers/`, registrados em `src/index.ts` |
 | Seeds | `src/seeds/` (3 seeds), executados por `src/run-seeds.ts` |
 | Services (Pagination) | `src/services/pagination.service.ts`, usado nas 5 listagens |
-| Testes | `postman/` — collection com 34 requisições e 68 asserções (ver [Testes](#testes-postman)) |
+| Testes | `postman/` — collection com 35 requisições e 76 asserções (ver [Testes](#testes-postman)) |
 
 ## Requisitos
 
@@ -34,10 +34,10 @@ product_situations ──1:N──> products
 | Tabela | Colunas |
 |---|---|
 | `situations` | `id`, `nameSituation` (único), `createdAt`, `updatedAt` |
-| `users` | `id`, `name`, `email` (único), `situationId` (FK), `createdAt`, `updatedAt` |
+| `users` | `id`, `name`, `email` (único), `password`, `situationId` (FK), `createdAt`, `updatedAt` |
 | `product_categories` | `id`, `name` (único), `createdAt`, `updatedAt` |
 | `product_situations` | `id`, `name` (único), `createdAt`, `updatedAt` |
-| `products` | `id`, `name`, `productSituationId` (FK), `productCategoryId` (FK), `createdAt`, `updatedAt` |
+| `products` | `id`, `name`, `slug` (único, gerado do nome), `description`, `price`, `productSituationId` (FK), `productCategoryId` (FK), `createdAt`, `updatedAt` |
 
 Todas as chaves estrangeiras usam `ON DELETE CASCADE`.
 
@@ -62,10 +62,11 @@ src/
     product-categories.ts    -> entidade ProductCategories
     product-situations.ts    -> entidade ProductSituations
     products.ts              -> entidade Products
-  migration/                 -> 5 migrations (criam as tabelas e as FKs)
-  seeds/                     -> dados padrão das tabelas de apoio
+  migration/                 -> 8 migrations (5 criam as tabelas e as FKs; 3 adicionam colunas)
+  seeds/                     -> dados padrão (situações, usuários, categorias, situações de produto e produtos)
   services/
     pagination.service.ts    -> serviço genérico de paginação (reutilizável)
+    slug.service.ts          -> gera o slug a partir de um nome (usado no controller e no seed)
     validation.service.ts    -> validação de ID e filtragem de campos do body
     error.service.ts         -> tratamento seguro de erro (sem expor SQL na resposta)
 sql/
@@ -148,12 +149,20 @@ que qualquer pessoa que clone o projeto recrie o banco idêntico com um comando.
 | `npx typeorm migration:revert -d dist/data-source.js` | Desfaz a última migration aplicada (roda o `down`) |
 
 Migrations existentes, em ordem de execução: `CreateSituations`, `CreateUsers`,
-`CreateProductCategories`, `CreateProductSituations`, `CreateProducts`.
+`CreateProductCategories`, `CreateProductSituations`, `CreateProducts`, `AddPasswordToUsers`,
+`AddSlugToProducts` e `AddDescriptionAndPriceToProducts`.
+
+A `AddPasswordToUsers` mostra como **alterar uma tabela que já existe**: em vez de editar a
+migration que criou `users`, uma migration nova adiciona a coluna `password`
+(`queryRunner.addColumn`), e o `down` a remove (`queryRunner.dropColumn`). Como a coluna é
+obrigatória, o PostgreSQL só aceita adicioná-la se a tabela `users` estiver vazia — com
+usuários cadastrados, é preciso esvaziar a tabela antes. No PostgreSQL a coluna nova fica no
+fim da tabela (o `AFTER` usado para reposicionar colunas é exclusivo do MySQL).
 
 ## Rotas da API
 
-Todas as entidades seguem o mesmo padrão de CRUD. Substitua `{recurso}` por
-`situations`, `users`, `product-categories`, `product-situations` ou `products`:
+`situations`, `product-categories`, `product-situations` e `products` seguem o mesmo padrão
+de CRUD — substitua `{recurso}` pelo nome:
 
 | Método | Rota | Descrição |
 |---|---|---|
@@ -162,6 +171,24 @@ Todas as entidades seguem o mesmo padrão de CRUD. Substitua `{recurso}` por
 | POST | `/{recurso}` | Cadastra um registro (201) |
 | PUT | `/{recurso}/edit/:id` | Atualiza um registro (404 se não existir) |
 | DELETE | `/{recurso}/delete/:id` | Remove um registro (404 se não existir) |
+
+### Usuários
+
+Os usuários seguem o padrão REST adotado a partir da Aula 14 — o `id` vai direto na rota:
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/users?page=1&limit=10` | Lista paginada (ordem `id` DESC) |
+| GET | `/users/:id` | Retorna um usuário com a situação relacionada (404 se não existir) |
+| POST | `/users` | Cadastra um usuário (201) — a senha é obrigatória só aqui |
+| PUT | `/users/:id` | Atualiza um usuário — exige todos os campos (404 se não existir) |
+| PATCH | `/users/:id/password` | Altera só a senha — body: `{ "password": "..." }` (404 se não existir) |
+| DELETE | `/users/:id` | Remove um usuário (404 se não existir) |
+
+A senha **nunca é devolvida** pela API: a coluna é marcada com `select: false` na entidade, e
+as respostas do cadastro e da troca de senha removem o campo antes de responder. Ela é gravada
+**criptografada com bcrypt** (custo 10): o banco guarda só o hash (`$2b$10$...`), nunca a senha.
+A troca de senha tem rota própria (`PATCH`), separada da edição dos dados, que ignora o campo.
 
 Além dessas, `GET /` devolve a mensagem de boas-vindas e `GET /test-connection` devolve
 `{ "message": "Conexão com API realizada com sucesso" }` — útil para confirmar que a API está
@@ -181,14 +208,17 @@ uma regra aplicada pelo navegador.
 // POST /situations
 { "nameSituation": "ativo" }
 
-// POST /users
-{ "name": "Vinicius", "email": "vinicius@teste.com", "situationId": 1 }
+// POST /users   (no PUT, a senha é ignorada)
+{ "name": "Vinicius", "email": "vinicius@teste.com", "password": "123456", "situationId": 1 }
 
 // POST /product-categories  |  POST /product-situations
 { "name": "eletrônicos" }
 
-// POST /products
-{ "name": "Notebook", "productCategoryId": 1, "productSituationId": 1 }
+// PATCH /users/:id/password
+{ "password": "654321" }
+
+// POST /products   (o slug é gerado do nome; um slug enviado no body é ignorado)
+{ "name": "Notebook", "description": "16 GB de RAM", "price": 3999.9, "productCategoryId": 1, "productSituationId": 1 }
 ```
 
 > O `POST` exige o header `Content-Type: application/json`.
@@ -204,12 +234,17 @@ uma regra aplicada pelo navegador.
 | Chave estrangeira inexistente (`situationId`, `productCategoryId`, `productSituationId`) | **400** com mensagem explicativa |
 | Valor único repetido (`email`, `nameSituation`, `name`) | **400** |
 | Nome de situação já cadastrado (verificado antes de gravar; na edição o próprio registro é ignorado) | **400** `Já existe uma situação cadastrada com esse nome` |
+| Usuário com nome vazio ou com menos de 3 caracteres, e-mail vazio ou inválido, sem situação, ou (no cadastro) senha vazia ou com menos de 6 caracteres — validado com **Yup** | **400** com a lista de todas as regras violadas |
+| E-mail de usuário já cadastrado (na edição o próprio registro é ignorado) | **400** `Já existe um usuário cadastrado com esse e-mail` |
+| Troca de senha com senha vazia ou com menos de 6 caracteres | **400** com a lista de regras violadas |
+| Produto com nome vazio, com menos de 3 ou mais de 255 caracteres, sem descrição, com preço ausente/não numérico/menor ou igual a zero, ou sem categoria/situação — validado com **Yup** | **400** com a lista de todas as regras violadas |
+| Produto cujo nome gera um slug já usado por outro produto (ex.: "Café Pilão" e "cafe pilao") | **400** `Já existe um produto com esse nome (slug "...")` |
 | Página inexistente na paginação | **400** com o total de páginas |
 | Falha inesperada | **500** com mensagem genérica (o erro completo vai só para o log do servidor) |
 
 O corpo das requisições passa por uma **whitelist de campos**: um `id` enviado no body é
-descartado, então um `POST` nunca sobrescreve um registro existente. As rotas `view/:id`
-de `users` e `products` trazem as entidades relacionadas já carregadas.
+descartado, então um `POST` nunca sobrescreve um registro existente. As rotas `GET /users/:id`
+e `GET /products/view/:id` trazem as entidades relacionadas já carregadas.
 
 ## Seeds
 
@@ -223,10 +258,14 @@ npm run build && npm run seed
 | Tabela | Registros padrão |
 |---|---|
 | `situations` | ativo, inativo, pendente |
+| `users` | Usuário Administrador (`admin@example.com`) e Usuário Teste (`teste@example.com`), ambos com a situação 1 e senha `123456` (gravada com bcrypt) |
 | `product_categories` | eletrônicos, vestuário, alimentos, livros |
 | `product_situations` | disponível, esgotado, descontinuado |
+| `products` | Smartphone Galaxy A55, Camiseta Básica Algodão, Café Torrado e Moído 500g, Livro Clean Code — com descrição, preço e slug |
 
 São **idempotentes**: se a tabela já tiver registros, o seed não faz nada (não duplica).
+A ordem dos seeds segue as chaves estrangeiras: `users` roda depois de `situations`, e
+`products` depois de `product_categories` e `product_situations`.
 Para criar um novo seed, adicione o arquivo em `src/seeds/` e registre a instância em
 `src/run-seeds.ts`.
 
@@ -255,7 +294,7 @@ existir, lança um `Error` com o total de páginas, tratado no `catch` do contro
 
 ## Testes (Postman)
 
-A pasta `postman/` traz uma collection com **34 requisições e 68 asserções automatizadas**,
+A pasta `postman/` traz uma collection com **35 requisições e 76 asserções automatizadas**,
 cobrindo o CRUD completo dos 5 recursos e 7 casos de erro (404, 400 de validação, FK
 inexistente, valor único duplicado, página inválida e tentativa de sobrescrita via `id`).
 
@@ -265,7 +304,7 @@ inexistente, valor único duplicado, página inválida e tentativa de sobrescrit
 2. No Postman: **Import** → selecione o arquivo `.json` da pasta `postman/`
 3. Na collection, clique em **Run** → **Run API P1 — Baião**
 
-O resultado esperado é **68 de 68 asserções aprovadas**. Também dá para rodar sem abrir o
+O resultado esperado é **76 de 76 asserções aprovadas**. Também dá para rodar sem abrir o
 Postman, pelo terminal:
 
 ```bash

@@ -20,6 +20,11 @@ export class Users {
   @Column({ type: 'varchar', length: 255, unique: true })
   email!: string;
 
+  // select: false -> a senha não é carregada nas consultas (find, findOne...) nem
+  // devolvida pela API; quem precisar dela (ex.: login) pede explicitamente
+  @Column({ type: 'varchar', length: 255, select: false })
+  password!: string;
+
   @Column()
   situationId!: number;
 
