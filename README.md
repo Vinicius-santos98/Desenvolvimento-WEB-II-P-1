@@ -1,6 +1,6 @@
 # Baião P1 — API Node.js + TypeScript
 
-API REST desenvolvida com **Node.js, Express, TypeScript, PostgreSQL, TypeORM, Yup, bcryptjs e slugify**, seguindo
+API REST desenvolvida com **Node.js, Express, TypeScript, PostgreSQL, TypeORM, Yup, bcryptjs, slugify e jsonwebtoken (JWT)**, seguindo
 o diagrama entidade-relacionamento do Projeto P1.
 
 ## Itens da avaliação
@@ -9,13 +9,16 @@ o diagrama entidade-relacionamento do Projeto P1.
 |---|---|
 | Configuração da API | `src/index.ts`, `package.json`, `tsconfig.json` |
 | Models / Entitys | `src/entity/` (5 entidades — no TypeORM a entity é o model), registradas em `src/data-source.ts` |
-| Variáveis de Ambiente | `.env.example` + `dotenv` em `src/index.ts` e `src/data-source.ts` |
-| Migrations | `src/migration/` (8 migrations: 5 criam as tabelas com FKs e 3 alteram tabelas existentes, todas com rollback) |
+| Variáveis de Ambiente | `.env.example` + `dotenv` em `src/index.ts`, `src/data-source.ts`, `src/services/auth.service.ts` e `src/middlewares/auth.middleware.ts` |
+| Migrations | `src/migration/` (9 migrations: 5 criam as tabelas com FKs e 4 alteram tabelas existentes, todas com rollback) |
 | CRUD | `src/controllers/` — as 5 operações para cada uma das 5 entidades |
 | Controllers | `src/controllers/`, registrados em `src/index.ts` |
-| Seeds | `src/seeds/` (3 seeds), executados por `src/run-seeds.ts` |
+| Seeds | `src/seeds/` (5 seeds), executados por `src/run-seeds.ts` |
 | Services (Pagination) | `src/services/pagination.service.ts`, usado nas 5 listagens |
-| Testes | `postman/` — collection com 35 requisições e 76 asserções (ver [Testes](#testes-postman)) |
+| Autenticação | `POST /` com e-mail e senha devolve um token JWT — `src/controllers/auth.ts` + `src/services/auth.service.ts` |
+| Rota restrita | middleware `verifyToken` valida o token — `src/middlewares/auth.middleware.ts`, aplicado em `GET /users` |
+| Recuperar senha | `POST /recover-password` gera uma chave única e devolve o link de troca de senha — `src/controllers/auth.ts` |
+| Testes | `postman/` — collection com 47 requisições e 104 asserções (ver [Testes](#testes-postman)) |
 
 ## Requisitos
 
@@ -34,7 +37,7 @@ product_situations ──1:N──> products
 | Tabela | Colunas |
 |---|---|
 | `situations` | `id`, `nameSituation` (único), `createdAt`, `updatedAt` |
-| `users` | `id`, `name`, `email` (único), `password`, `situationId` (FK), `createdAt`, `updatedAt` |
+| `users` | `id`, `name`, `email` (único), `password`, `recoverPassword` (único, pode ser nulo), `situationId` (FK), `createdAt`, `updatedAt` |
 | `product_categories` | `id`, `name` (único), `createdAt`, `updatedAt` |
 | `product_situations` | `id`, `name` (único), `createdAt`, `updatedAt` |
 | `products` | `id`, `name`, `slug` (único, gerado do nome), `description`, `price`, `productSituationId` (FK), `productCategoryId` (FK), `createdAt`, `updatedAt` |
@@ -49,7 +52,7 @@ src/
   data-source.ts           -> configuração da conexão TypeORM (lê variáveis de ambiente)
   run-seeds.ts             -> executor dos seeds (conecta, roda, encerra a conexão)
   controllers/
-    auth.ts                  -> rota de boas-vindas ("/")
+    auth.ts                  -> login ("POST /") e recuperar senha ("POST /recover-password")
     test-connection.ts       -> rota de teste de conexão ("/test-connection")
     situations.ts            -> CRUD de situações
     users.ts                 -> CRUD de usuários
@@ -62,9 +65,12 @@ src/
     product-categories.ts    -> entidade ProductCategories
     product-situations.ts    -> entidade ProductSituations
     products.ts              -> entidade Products
-  migration/                 -> 8 migrations (5 criam as tabelas e as FKs; 3 adicionam colunas)
+  middlewares/
+    auth.middleware.ts       -> verifyToken: valida o token JWT nas rotas restritas
+  migration/                 -> 9 migrations (5 criam as tabelas e as FKs; 4 adicionam colunas)
   seeds/                     -> dados padrão (situações, usuários, categorias, situações de produto e produtos)
   services/
+    auth.service.ts          -> autenticação: confere e-mail/senha (bcrypt) e gera o token JWT
     pagination.service.ts    -> serviço genérico de paginação (reutilizável)
     slug.service.ts          -> gera o slug a partir de um nome (usado no controller e no seed)
     validation.service.ts    -> validação de ID e filtragem de campos do body
@@ -72,7 +78,7 @@ src/
 sql/
   create_database.sql        -> script para criar o banco "node_api"
 postman/
-  API P1 — Baião.postman_collection.json -> 34 requisições com testes automatizados
+  API P1 — Baião.postman_collection.json -> 47 requisições com testes automatizados
 ```
 
 ## Configuração
@@ -99,8 +105,13 @@ postman/
 | `DB_USERNAME`  | Usuário do banco                              | `postgres`   |
 | `DB_PASSWORD`  | Senha do usuário do banco                     | —            |
 | `DB_DATABASE`  | Nome do banco de dados                        | `node_api`   |
+| `JWT_SECRET`   | Segredo que assina os tokens de login (texto longo e aleatório) | —  |
 
 > O arquivo `.env` não é commitado (está no `.gitignore`). Use o `.env.example` como modelo.
+>
+> Para gerar um `JWT_SECRET` seguro:
+> `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`.
+> Quem tem o segredo consegue criar tokens válidos, então ele nunca deve ir para o Git.
 
 ## Ordem de setup do projeto do zero
 
@@ -111,7 +122,7 @@ npm install
 # 2. cria o banco
 psql -U postgres -h localhost -c "CREATE DATABASE node_api WITH ENCODING 'UTF8';"
 
-# 3. copie e EDITE o .env preenchendo DB_PASSWORD com a senha do seu PostgreSQL
+# 3. copie e EDITE o .env preenchendo DB_PASSWORD (senha do PostgreSQL) e JWT_SECRET
 cp .env.example .env
 
 # 4. compila
@@ -150,7 +161,7 @@ que qualquer pessoa que clone o projeto recrie o banco idêntico com um comando.
 
 Migrations existentes, em ordem de execução: `CreateSituations`, `CreateUsers`,
 `CreateProductCategories`, `CreateProductSituations`, `CreateProducts`, `AddPasswordToUsers`,
-`AddSlugToProducts` e `AddDescriptionAndPriceToProducts`.
+`AddSlugToProducts`, `AddDescriptionAndPriceToProducts` e `AddRecoverPasswordToUsers`.
 
 A `AddPasswordToUsers` mostra como **alterar uma tabela que já existe**: em vez de editar a
 migration que criou `users`, uma migration nova adiciona a coluna `password`
@@ -158,6 +169,9 @@ migration que criou `users`, uma migration nova adiciona a coluna `password`
 obrigatória, o PostgreSQL só aceita adicioná-la se a tabela `users` estiver vazia — com
 usuários cadastrados, é preciso esvaziar a tabela antes. No PostgreSQL a coluna nova fica no
 fim da tabela (o `AFTER` usado para reposicionar colunas é exclusivo do MySQL).
+
+Já a `AddRecoverPasswordToUsers` adiciona uma coluna que **pode ser nula** (`isNullable: true`),
+então ela é aplicada mesmo com usuários já cadastrados: eles simplesmente ficam com `NULL`.
 
 ## Rotas da API
 
@@ -178,7 +192,7 @@ Os usuários seguem o padrão REST adotado a partir da Aula 14 — o `id` vai di
 
 | Método | Rota | Descrição |
 |---|---|---|
-| GET | `/users?page=1&limit=10` | Lista paginada (ordem `id` DESC) |
+| GET | `/users?page=1&limit=10` | Lista paginada (ordem `id` DESC) — **rota restrita, exige token** |
 | GET | `/users/:id` | Retorna um usuário com a situação relacionada (404 se não existir) |
 | POST | `/users` | Cadastra um usuário (201) — a senha é obrigatória só aqui |
 | PUT | `/users/:id` | Atualiza um usuário — exige todos os campos (404 se não existir) |
@@ -190,9 +204,91 @@ as respostas do cadastro e da troca de senha removem o campo antes de responder.
 **criptografada com bcrypt** (custo 10): o banco guarda só o hash (`$2b$10$...`), nunca a senha.
 A troca de senha tem rota própria (`PATCH`), separada da edição dos dados, que ignora o campo.
 
-Além dessas, `GET /` devolve a mensagem de boas-vindas e `GET /test-connection` devolve
+Além dessas, `GET /test-connection` devolve
 `{ "message": "Conexão com API realizada com sucesso" }` — útil para confirmar que a API está
 no ar depois de publicar num servidor.
+
+### Autenticação (login)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/` | Login — body: `{ "email": "...", "password": "..." }` |
+
+```jsonc
+// POST /   { "email": "admin@example.com", "password": "123456" }
+// 200
+{
+  "message": "Login realizado com sucesso",
+  "user": { "id": 1, "name": "Usuário Administrador", "email": "admin@example.com", "token": "eyJhbGciOi..." }
+}
+```
+
+Como funciona (`src/services/auth.service.ts`):
+
+1. Busca o usuário pelo e-mail. A senha é `select: false`, então a consulta pede a coluna explicitamente.
+2. Compara a senha digitada com o hash do banco com `bcrypt.compare` (método `comparePassword` da entidade `Users`).
+3. Se estiver certa, gera um **token JWT** com o `id` do usuário, assinado com o `JWT_SECRET` do `.env`
+   e válido por **7 dias** (em desenvolvimento; em produção o recomendado é no máximo 1 dia).
+
+E-mail inexistente e senha errada devolvem **a mesma mensagem** (`Usuário ou senha inválidos`),
+para não revelar a quem tenta entrar se o e-mail está cadastrado.
+
+### Rotas restritas (token)
+
+Uma rota restrita só responde se a requisição trouxer um token válido no cabeçalho:
+
+```
+Authorization: Bearer eyJhbGciOi...
+```
+
+Quem faz essa checagem é o middleware `verifyToken` (`src/middlewares/auth.middleware.ts`), que roda
+**antes** da função da rota:
+
+1. Lê o cabeçalho `Authorization`. Se não vier → **401** `Necessário enviar o token de autenticação`.
+2. Separa o prefixo `Bearer` do token (`split(' ')`). Se o formato não for `Bearer <token>` → **401**.
+3. Confere o token com `jwt.verify` e o `JWT_SECRET`. Token falso, alterado, assinado com outro
+   segredo ou expirado → **401** `Token inválido ou expirado`.
+4. Se o token for válido, guarda o id do usuário em `request.user` e chama `next()`, liberando a rota.
+
+Para proteger outra rota, basta colocar o middleware antes da função:
+
+```ts
+import { verifyToken } from '../middlewares/auth.middleware';
+
+router.get('/', verifyToken, async (request, response) => { ... });
+```
+
+Por enquanto, como na aula, só a listagem de usuários (`GET /users`) é restrita.
+
+### Recuperar senha
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/recover-password` | Gera a chave de recuperação e devolve o link para trocar a senha |
+
+```jsonc
+// POST /recover-password
+{ "email": "admin@example.com", "urlRecoverPassword": "http://localhost:3000/recover-password" }
+
+// 200
+{
+  "message": "Gerado o link para recuperar a senha",
+  "urlRecoverPassword": "http://localhost:3000/recover-password?email=admin%40example.com&key=3ba1837b..."
+}
+```
+
+- `urlRecoverPassword` é o endereço da página (do front-end) onde o usuário vai digitar a senha nova.
+- A chave (`key`) tem 64 caracteres: 32 bytes aleatórios gerados com `crypto.randomBytes` e
+  convertidos para hexadecimal. Ela fica gravada na coluna `recoverPassword` do usuário, e cada
+  pedido novo gera uma chave nova que substitui a anterior.
+- Assim como a senha, a coluna `recoverPassword` é `select: false`: a chave nunca aparece nas
+  outras rotas (quem tivesse a chave poderia trocar a senha).
+- O e-mail vai codificado no link (`@` vira `%40`, `+` vira `%2B`), e o front-end lê o valor
+  original com `URLSearchParams`.
+
+> **Atenção (fase de desenvolvimento):** como na aula, o link volta na própria resposta da API,
+> para facilitar os testes. Num sistema publicado ele deve ser enviado **só por e-mail**; se a
+> resposta trouxer o link, qualquer pessoa que souber um e-mail cadastrado consegue a chave.
 
 ### Requisições externas (CORS)
 
@@ -239,6 +335,14 @@ uma regra aplicada pelo navegador.
 | Troca de senha com senha vazia ou com menos de 6 caracteres | **400** com a lista de regras violadas |
 | Produto com nome vazio, com menos de 3 ou mais de 255 caracteres, sem descrição, com preço ausente/não numérico/menor ou igual a zero, ou sem categoria/situação — validado com **Yup** | **400** com a lista de todas as regras violadas |
 | Produto cujo nome gera um slug já usado por outro produto (ex.: "Café Pilão" e "cafe pilao") | **400** `Já existe um produto com esse nome (slug "...")` |
+| Login sem e-mail ou sem senha | **400** `E-mail e senha são obrigatórios` |
+| Login com e-mail inexistente ou senha errada | **401** `Usuário ou senha inválidos` |
+| Recuperar senha sem e-mail, com e-mail inválido ou sem URL | **400** com a lista de regras violadas |
+| Recuperar senha com URL que não é `http`/`https` (ex.: `meusite`) | **400** `O campo URL deve ser um endereço válido (http ou https)` |
+| Recuperar senha com e-mail não cadastrado | **404** `Usuário não encontrado` |
+| Rota restrita sem o cabeçalho `Authorization` | **401** `Necessário enviar o token de autenticação` |
+| Rota restrita com cabeçalho fora do formato `Bearer <token>` | **401** `Token inválido. Use o formato: Bearer <token>` |
+| Rota restrita com token falso, alterado ou expirado | **401** `Token inválido ou expirado` |
 | Página inexistente na paginação | **400** com o total de páginas |
 | Falha inesperada | **500** com mensagem genérica (o erro completo vai só para o log do servidor) |
 
@@ -294,9 +398,19 @@ existir, lança um `Error` com o total de páginas, tratado no `catch` do contro
 
 ## Testes (Postman)
 
-A pasta `postman/` traz uma collection com **35 requisições e 76 asserções automatizadas**,
-cobrindo o CRUD completo dos 5 recursos e 7 casos de erro (404, 400 de validação, FK
-inexistente, valor único duplicado, página inválida e tentativa de sobrescrita via `id`).
+A pasta `postman/` traz uma collection com **47 requisições e 104 asserções automatizadas**,
+cobrindo o login, a recuperação de senha, o CRUD completo dos 5 recursos e 16 casos de erro (404, 400 de validação, FK
+inexistente, valor único duplicado, página inválida, tentativa de sobrescrita via `id` e
+login sem dados, com senha errada e com e-mail inexistente, rota restrita sem token, com
+token fora do formato e com token falso, e recuperação de senha sem dados, com URL inválida e com
+e-mail não cadastrado). Na pasta de usuários, depois da troca
+de senha, a collection confirma que o login passa a aceitar a senha nova e recusa a antiga.
+
+O login da pasta `00 - Geral` usa o usuário do seed (`admin@example.com` / `123456`), e o
+token recebido fica guardado na variável `token` da collection. Logo depois, "Recuperar senha" gera o
+link para o mesmo usuário e guarda a chave na variável `recoverKey`. A listagem de usuários (rota
+restrita) envia esse token na aba **Authorization → Bearer Token** (`{{token}}`). Por isso, ao
+rodar uma pasta sozinha, execute antes o login da pasta `00 - Geral`.
 
 ### Como rodar
 
@@ -304,7 +418,7 @@ inexistente, valor único duplicado, página inválida e tentativa de sobrescrit
 2. No Postman: **Import** → selecione o arquivo `.json` da pasta `postman/`
 3. Na collection, clique em **Run** → **Run API P1 — Baião**
 
-O resultado esperado é **76 de 76 asserções aprovadas**. Também dá para rodar sem abrir o
+O resultado esperado é **104 de 104 asserções aprovadas**. Também dá para rodar sem abrir o
 Postman, pelo terminal:
 
 ```bash

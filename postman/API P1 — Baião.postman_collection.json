@@ -1,1528 +1,2088 @@
 {
-  "info": {
-    "_postman_id": "35e70035-c2f8-4aac-aa82-a2a4914048dd",
-    "name": "API P1 — Baião",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "45420361",
-    "_collection_link": "https://go.postman.co/collection/45420361-35e70035-c2f8-4aac-aa82-a2a4914048dd?source=collection_link"
-  },
-  "item": [
-    {
-      "name": "00 - Geral",
-      "item": [
-        {
-          "name": "Bem vindo",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                ""
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - servidor no ar\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"Mensagem de boas-vindas\", function () {",
-                  "    pm.expect(pm.response.text()).to.include(\"Bem-vindo\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Teste conexão",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - API no ar\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"Mensagem de conexão\", function () {",
-                  "    pm.expect(pm.response.json().message).to.eql(\"Conexão com API realizada com sucesso\");",
-                  "});",
-                  "// cabeçalho que libera o acesso de front-ends em outros endereços (CORS)",
-                  "pm.test(\"CORS liberado (Access-Control-Allow-Origin)\", function () {",
-                  "    pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.eql(\"*\");",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/test-connection",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "test-connection"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "01 - Situations",
-      "item": [
-        {
-          "name": "Cadastrar",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{ \"nameSituation\": \"em análise\" }",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/situations",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "situations"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 201 - situação cadastrado(a)\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Resposta traz o registro com id\", function () {",
-                  "    pm.expect(json.situation.id).to.be.a(\"number\");",
-                  "});",
-                  "// guarda o id criado: as próximas requisições da pasta usam {{createdSituationId}}",
-                  "pm.collectionVariables.set(\"createdSituationId\", json.situation.id);"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Listar paginado",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/situations?page=1&limit=2",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "situations"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "2"
-                }
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - listagem\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Resposta paginada (PaginationService)\", function () {",
-                  "    pm.expect(json.data).to.be.an(\"array\");",
-                  "    pm.expect(json.currentPage).to.be.a(\"number\");",
-                  "    pm.expect(json.lastPage).to.be.a(\"number\");",
-                  "    pm.expect(json.totalRecords).to.be.a(\"number\");",
-                  "});",
-                  "pm.test(\"Respeita o limit da URL\", function () {",
-                  "    pm.expect(json.data.length).to.be.at.most(2);",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Visualizar por ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/situations/view/{{createdSituationId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "situations",
-                "view",
-                "{{createdSituationId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro encontrado\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Traz o registro cadastrado no POST\", function () {",
-                  "    pm.expect(json.id).to.eql(Number(pm.collectionVariables.get(\"createdSituationId\")));",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Editar",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{ \"nameSituation\": \"em análise - revisado\" }",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/situations/edit/{{createdSituationId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "situations",
-                "edit",
-                "{{createdSituationId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro atualizado\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"Campos enviados foram gravados\", function () {",
-                  "    const sent = JSON.parse(pm.request.body.raw);",
-                  "    const saved = pm.response.json().situation;",
-                  "    Object.keys(sent).forEach(function (field) {",
-                  "        pm.expect(saved[field]).to.eql(sent[field]);",
-                  "    });",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Delete",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/situations/delete/{{createdSituationId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "situations",
-                "delete",
-                "{{createdSituationId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro removido\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "02 - Users",
-      "item": [
-        {
-          "name": "Cadastrar",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Vinicius Santos\",\n  \"email\": \"vinicius@teste.com\",\n  \"password\": \"123456\",\n  \"situationId\": 1\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/users",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "users"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 201 - usuário cadastrado(a)\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Resposta traz o registro com id\", function () {",
-                  "    pm.expect(json.user.id).to.be.a(\"number\");",
-                  "});",
-                  "// guarda o id criado: as próximas requisições da pasta usam {{createdUserId}}",
-                  "pm.collectionVariables.set(\"createdUserId\", json.user.id);",
-                  "pm.test(\"A senha não é devolvida na resposta\", function () {",
-                  "    pm.expect(pm.response.json().user).to.not.have.property(\"password\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Listar paginado",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/users",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "users"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - listagem\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Resposta paginada (PaginationService)\", function () {",
-                  "    pm.expect(json.data).to.be.an(\"array\");",
-                  "    pm.expect(json.currentPage).to.be.a(\"number\");",
-                  "    pm.expect(json.lastPage).to.be.a(\"number\");",
-                  "    pm.expect(json.totalRecords).to.be.a(\"number\");",
-                  "});",
-                  "pm.test(\"Nenhum usuário da lista traz a senha\", function () {",
-                  "    pm.response.json().data.forEach(function (user) { pm.expect(user).to.not.have.property(\"password\"); });",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Visualizar por ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/users/{{createdUserId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "users",
-                "{{createdUserId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro encontrado\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Traz o registro cadastrado no POST\", function () {",
-                  "    pm.expect(json.id).to.eql(Number(pm.collectionVariables.get(\"createdUserId\")));",
-                  "});",
-                  "pm.test(\"Traz as entidades relacionadas (FK resolvida)\", function () {",
-                  "    pm.expect(json.situation).to.be.an(\"object\");",
-                  "});",
-                  "pm.test(\"A senha não é devolvida\", function () {",
-                  "    pm.expect(pm.response.json()).to.not.have.property(\"password\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Editar",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Vinicius S. Santos\",\n  \"email\": \"vinicius@teste.com\",\n  \"situationId\": 2\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/users/{{createdUserId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "users",
-                "{{createdUserId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro atualizado\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"Campos enviados foram gravados\", function () {",
-                  "    const sent = JSON.parse(pm.request.body.raw);",
-                  "    const saved = pm.response.json().user;",
-                  "    Object.keys(sent).forEach(function (field) {",
-                  "        pm.expect(saved[field]).to.eql(sent[field]);",
-                  "    });",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Editar senha",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - senha atualizada\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "// a senha nova é gravada criptografada (bcrypt) e nunca volta na resposta",
-                  "pm.test(\"A senha não é devolvida na resposta\", function () {",
-                  "    pm.expect(pm.response.json().user).to.not.have.property(\"password\");",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "PATCH",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"password\": \"654321\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/users/{{createdUserId}}/password",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "users",
-                "{{createdUserId}}",
-                "password"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Delete",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/users/{{createdUserId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "users",
-                "{{createdUserId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro removido\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "03 - Product Categories",
-      "item": [
-        {
-          "name": "Cadastrar",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{ \"name\": \"informática\" }",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/product-categories",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "product-categories"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 201 - categoria cadastrado(a)\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Resposta traz o registro com id\", function () {",
-                  "    pm.expect(json.productCategory.id).to.be.a(\"number\");",
-                  "});",
-                  "// guarda o id criado: as próximas requisições da pasta usam {{createdCategoryId}}",
-                  "pm.collectionVariables.set(\"createdCategoryId\", json.productCategory.id);"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Listar paginado",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/product-categories",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "product-categories"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - listagem\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Resposta paginada (PaginationService)\", function () {",
-                  "    pm.expect(json.data).to.be.an(\"array\");",
-                  "    pm.expect(json.currentPage).to.be.a(\"number\");",
-                  "    pm.expect(json.lastPage).to.be.a(\"number\");",
-                  "    pm.expect(json.totalRecords).to.be.a(\"number\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Visualizar por ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/product-categories/view/{{createdCategoryId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "product-categories",
-                "view",
-                "{{createdCategoryId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro encontrado\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Traz o registro cadastrado no POST\", function () {",
-                  "    pm.expect(json.id).to.eql(Number(pm.collectionVariables.get(\"createdCategoryId\")));",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Editar",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{ \"name\": \"informática e games\" }",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/product-categories/edit/{{createdCategoryId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "product-categories",
-                "edit",
-                "{{createdCategoryId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro atualizado\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"Campos enviados foram gravados\", function () {",
-                  "    const sent = JSON.parse(pm.request.body.raw);",
-                  "    const saved = pm.response.json().productCategory;",
-                  "    Object.keys(sent).forEach(function (field) {",
-                  "        pm.expect(saved[field]).to.eql(sent[field]);",
-                  "    });",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Delete",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/product-categories/delete/{{createdCategoryId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "product-categories",
-                "delete",
-                "{{createdCategoryId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro removido\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "04 - Product Situations",
-      "item": [
-        {
-          "name": "Cadastrar",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{ \"name\": \"pré-venda\" }",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/product-situations",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "product-situations"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 201 - situação de produto cadastrado(a)\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Resposta traz o registro com id\", function () {",
-                  "    pm.expect(json.productSituation.id).to.be.a(\"number\");",
-                  "});",
-                  "// guarda o id criado: as próximas requisições da pasta usam {{createdProductSituationId}}",
-                  "pm.collectionVariables.set(\"createdProductSituationId\", json.productSituation.id);"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Listar paginado",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/product-situations",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "product-situations"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - listagem\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Resposta paginada (PaginationService)\", function () {",
-                  "    pm.expect(json.data).to.be.an(\"array\");",
-                  "    pm.expect(json.currentPage).to.be.a(\"number\");",
-                  "    pm.expect(json.lastPage).to.be.a(\"number\");",
-                  "    pm.expect(json.totalRecords).to.be.a(\"number\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Visualizar por ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/product-situations/view/{{createdProductSituationId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "product-situations",
-                "view",
-                "{{createdProductSituationId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro encontrado\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Traz o registro cadastrado no POST\", function () {",
-                  "    pm.expect(json.id).to.eql(Number(pm.collectionVariables.get(\"createdProductSituationId\")));",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Editar",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{ \"name\": \"pré-venda encerrada\" }",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/product-situations/edit/{{createdProductSituationId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "product-situations",
-                "edit",
-                "{{createdProductSituationId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro atualizado\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"Campos enviados foram gravados\", function () {",
-                  "    const sent = JSON.parse(pm.request.body.raw);",
-                  "    const saved = pm.response.json().productSituation;",
-                  "    Object.keys(sent).forEach(function (field) {",
-                  "        pm.expect(saved[field]).to.eql(sent[field]);",
-                  "    });",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Delete",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/product-situations/delete/{{createdProductSituationId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "product-situations",
-                "delete",
-                "{{createdProductSituationId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro removido\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "05 - Products",
-      "item": [
-        {
-          "name": "Cadastrar",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Notebook Dell Inspiron\",\n  \"description\": \"Notebook com 16 GB de RAM e SSD de 512 GB.\",\n  \"price\": 3999.9,\n  \"productCategoryId\": 1,\n  \"productSituationId\": 1\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/products",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "products"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 201 - produto cadastrado(a)\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Resposta traz o registro com id\", function () {",
-                  "    pm.expect(json.product.id).to.be.a(\"number\");",
-                  "});",
-                  "// guarda o id criado: as próximas requisições da pasta usam {{createdProductId}}",
-                  "pm.collectionVariables.set(\"createdProductId\", json.product.id);",
-                  "pm.test(\"Slug gerado a partir do nome\", function () {",
-                  "    pm.expect(pm.response.json().product.slug).to.eql(\"notebook-dell-inspiron\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Listar paginado",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/products",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "products"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - listagem\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Resposta paginada (PaginationService)\", function () {",
-                  "    pm.expect(json.data).to.be.an(\"array\");",
-                  "    pm.expect(json.currentPage).to.be.a(\"number\");",
-                  "    pm.expect(json.lastPage).to.be.a(\"number\");",
-                  "    pm.expect(json.totalRecords).to.be.a(\"number\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Visualizar por ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/products/view/{{createdProductId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "products",
-                "view",
-                "{{createdProductId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro encontrado\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.test(\"Traz o registro cadastrado no POST\", function () {",
-                  "    pm.expect(json.id).to.eql(Number(pm.collectionVariables.get(\"createdProductId\")));",
-                  "});",
-                  "pm.test(\"Traz as entidades relacionadas (FK resolvida)\", function () {",
-                  "    pm.expect(json.productCategory).to.be.an(\"object\");",
-                  "    pm.expect(json.productSituation).to.be.an(\"object\");",
-                  "});",
-                  "pm.test(\"Preço vem como número\", function () {",
-                  "    pm.expect(pm.response.json().price).to.be.a(\"number\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Editar",
-          "request": {
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Notebook Dell Inspiron 15\",\n  \"description\": \"Notebook com tela de 15 polegadas, 16 GB de RAM e SSD de 512 GB.\",\n  \"price\": 4299.9,\n  \"productCategoryId\": 1,\n  \"productSituationId\": 2\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/products/edit/{{createdProductId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "products",
-                "edit",
-                "{{createdProductId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro atualizado\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"Campos enviados foram gravados\", function () {",
-                  "    const sent = JSON.parse(pm.request.body.raw);",
-                  "    const saved = pm.response.json().product;",
-                  "    Object.keys(sent).forEach(function (field) {",
-                  "        pm.expect(saved[field]).to.eql(sent[field]);",
-                  "    });",
-                  "});",
-                  "pm.test(\"Slug atualizado junto com o nome\", function () {",
-                  "    pm.expect(pm.response.json().product.slug).to.eql(\"notebook-dell-inspiron-15\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Delete",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/products/delete/{{createdProductId}}",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "products",
-                "delete",
-                "{{createdProductId}}"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200 - registro removido\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "06 - Casos de erro",
-      "item": [
-        {
-          "name": "404 ID inexistente",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/situations/view/9999",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "situations",
-                "view",
-                "9999"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 404 - registro inexistente\", function () {",
-                  "    pm.response.to.have.status(404);",
-                  "});",
-                  "pm.test(\"Mensagem legível\", function () {",
-                  "    pm.expect(pm.response.json().message).to.be.a(\"string\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "400 ID não numérico",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/situations/view/abc",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "situations",
-                "view",
-                "abc"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 400 - ID não numérico\", function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "pm.test(\"Mensagem legível\", function () {",
-                  "    pm.expect(pm.response.json().message).to.be.a(\"string\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "400 Campo obrigatório faltando",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{ \"name\": \"Sem situação\", \"email\": \"sem@teste.com\" }",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/users",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "users"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 400 - campo obrigatório faltando\", function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "pm.test(\"Aponta o campo que faltou\", function () {",
-                  "    pm.expect(pm.response.json().message).to.include(\"O campo situação é obrigatório\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "400 FK inexistente",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"FK inválida\",\n  \"email\": \"fk@teste.com\",\n  \"password\": \"123456\",\n  \"situationId\": 9999\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/users",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "users"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 400 - FK inexistente\", function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "pm.test(\"Mensagem legível\", function () {",
-                  "    pm.expect(pm.response.json().message).to.be.a(\"string\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "400 Valor único duplicado",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{ \"name\": \"livros\" }",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/product-categories",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "product-categories"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 400 - valor único duplicado\", function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "pm.test(\"Mensagem legível\", function () {",
-                  "    pm.expect(pm.response.json().message).to.be.a(\"string\");",
-                  "});",
-                  "pm.test(\"Não expõe detalhes do banco na resposta\", function () {",
-                  "    pm.expect(pm.response.json()).to.not.have.any.keys(\"query\", \"driverError\", \"error\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "400 Página inválida",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/situations?page=99",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "situations"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "99"
-                }
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 400 - página inválida\", function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "pm.test(\"Informa o total de páginas\", function () {",
-                  "    pm.expect(pm.response.json().message).to.include(\"Página inválida\");",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "201 ID no body é ignorado",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"id\": 1,\n  \"name\": \"tentativa de sobrescrita {{$timestamp}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/product-categories",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "product-categories"
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 201 - cadastrou um registro novo\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "const created = pm.response.json().productCategory;",
-                  "pm.test(\"O id do corpo foi ignorado: não sobrescreveu o registro 1\", function () {",
-                  "    pm.expect(created.id).to.not.eql(1);",
-                  "});",
-                  "// remove o registro de teste para não deixar lixo no banco",
-                  "pm.sendRequest({",
-                  "    url: pm.variables.get(\"host\") + \"/product-categories/delete/\" + created.id,",
-                  "    method: \"DELETE\",",
-                  "}, function () {});"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    }
-  ],
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [
-          ""
-        ]
-      }
-    },
-    {
-      "listen": "test",
-      "script": {
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [
-          ""
-        ]
-      }
-    }
-  ],
-  "variable": [
-    {
-      "key": "host",
-      "value": "http://localhost:8080",
-      "type": "string"
-    },
-    {
-      "key": "createdSituationId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "createdUserId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "createdCategoryId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "createdProductSituationId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "createdProductId",
-      "value": "",
-      "type": "string"
-    }
-  ]
+	"info": {
+		"_postman_id": "35e70035-c2f8-4aac-aa82-a2a4914048dd",
+		"name": "API P1 — Baião",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "45420361",
+		"_collection_link": "https://go.postman.co/collection/45420361-35e70035-c2f8-4aac-aa82-a2a4914048dd?source=collection_link"
+	},
+	"item": [
+		{
+			"name": "00 - Geral",
+			"item": [
+				{
+					"name": "Autenticação (login)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								""
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// usa o usuário criado pelo seed (npm run seed): admin@example.com / 123456",
+									"pm.test(\"Status 200 - login realizado\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Mensagem de sucesso\", function () {",
+									"    pm.expect(json.message).to.eql(\"Login realizado com sucesso\");",
+									"});",
+									"pm.test(\"Devolve id, nome, e-mail e token\", function () {",
+									"    pm.expect(json.user.id).to.be.a(\"number\");",
+									"    pm.expect(json.user.name).to.be.a(\"string\");",
+									"    pm.expect(json.user.email).to.eql(\"admin@example.com\");",
+									"    pm.expect(json.user.token).to.be.a(\"string\").and.not.empty;",
+									"});",
+									"pm.test(\"A senha não é devolvida na resposta\", function () {",
+									"    pm.expect(json.user).to.not.have.property(\"password\");",
+									"});",
+									"// guarda o token: as próximas aulas vão enviá-lo para acessar as rotas protegidas",
+									"pm.collectionVariables.set(\"token\", json.user.token);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Recuperar senha",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"urlRecoverPassword\": \"http://localhost:3000/recover-password\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/recover-password",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"recover-password"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - link gerado\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Mensagem de sucesso\", function () {",
+									"    pm.expect(json.message).to.eql(\"Gerado o link para recuperar a senha\");",
+									"});",
+									"// o link vem como: http://localhost:3000/recover-password?email=...&key=...",
+									"const link = json.urlRecoverPassword;",
+									"const key = (link.match(/[?&]key=([^&]+)/) || [])[1];",
+									"const email = decodeURIComponent((link.match(/[?&]email=([^&]+)/) || [])[1] || \"\");",
+									"pm.test(\"Link usa a URL enviada e traz o e-mail\", function () {",
+									"    pm.expect(link.indexOf(\"http://localhost:3000/recover-password?\")).to.eql(0);",
+									"    pm.expect(email).to.eql(\"admin@example.com\");",
+									"});",
+									"pm.test(\"Chave segura com 64 caracteres hexadecimais\", function () {",
+									"    pm.expect(key).to.match(/^[0-9a-f]{64}$/);",
+									"});",
+									"// guarda a chave: a próxima etapa (trocar a senha pelo link) vai usá-la",
+									"pm.collectionVariables.set(\"recoverKey\", key);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Teste conexão",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - API no ar\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Mensagem de conexão\", function () {",
+									"    pm.expect(pm.response.json().message).to.eql(\"Conexão com API realizada com sucesso\");",
+									"});",
+									"// cabeçalho que libera o acesso de front-ends em outros endereços (CORS)",
+									"pm.test(\"CORS liberado (Access-Control-Allow-Origin)\", function () {",
+									"    pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.eql(\"*\");",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/test-connection",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"test-connection"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "01 - Situations",
+			"item": [
+				{
+					"name": "Cadastrar",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"nameSituation\": \"em análise\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/situations",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"situations"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 - situação cadastrado(a)\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Resposta traz o registro com id\", function () {",
+									"    pm.expect(json.situation.id).to.be.a(\"number\");",
+									"});",
+									"// guarda o id criado: as próximas requisições da pasta usam {{createdSituationId}}",
+									"pm.collectionVariables.set(\"createdSituationId\", json.situation.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Listar paginado",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/situations?page=1&limit=2",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"situations"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - listagem\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Resposta paginada (PaginationService)\", function () {",
+									"    pm.expect(json.data).to.be.an(\"array\");",
+									"    pm.expect(json.currentPage).to.be.a(\"number\");",
+									"    pm.expect(json.lastPage).to.be.a(\"number\");",
+									"    pm.expect(json.totalRecords).to.be.a(\"number\");",
+									"});",
+									"pm.test(\"Respeita o limit da URL\", function () {",
+									"    pm.expect(json.data.length).to.be.at.most(2);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Visualizar por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/situations/view/{{createdSituationId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"situations",
+								"view",
+								"{{createdSituationId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro encontrado\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Traz o registro cadastrado no POST\", function () {",
+									"    pm.expect(json.id).to.eql(Number(pm.collectionVariables.get(\"createdSituationId\")));",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Editar",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"nameSituation\": \"em análise - revisado\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/situations/edit/{{createdSituationId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"situations",
+								"edit",
+								"{{createdSituationId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro atualizado\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Campos enviados foram gravados\", function () {",
+									"    const sent = JSON.parse(pm.request.body.raw);",
+									"    const saved = pm.response.json().situation;",
+									"    Object.keys(sent).forEach(function (field) {",
+									"        pm.expect(saved[field]).to.eql(sent[field]);",
+									"    });",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/situations/delete/{{createdSituationId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"situations",
+								"delete",
+								"{{createdSituationId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro removido\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "02 - Users",
+			"item": [
+				{
+					"name": "Cadastrar",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Vinicius Santos\",\n  \"email\": \"vinicius@teste.com\",\n  \"password\": \"123456\",\n  \"situationId\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/users",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 - usuário cadastrado(a)\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Resposta traz o registro com id\", function () {",
+									"    pm.expect(json.user.id).to.be.a(\"number\");",
+									"});",
+									"// guarda o id criado: as próximas requisições da pasta usam {{createdUserId}}",
+									"pm.collectionVariables.set(\"createdUserId\", json.user.id);",
+									"pm.test(\"A senha não é devolvida na resposta\", function () {",
+									"    pm.expect(pm.response.json().user).to.not.have.property(\"password\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Listar paginado",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/users",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// rota restrita: o token vem do login (00 - Geral) e vai no cabeçalho Authorization: Bearer {{token}}",
+									"pm.test(\"Status 200 - listagem\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Resposta paginada (PaginationService)\", function () {",
+									"    pm.expect(json.data).to.be.an(\"array\");",
+									"    pm.expect(json.currentPage).to.be.a(\"number\");",
+									"    pm.expect(json.lastPage).to.be.a(\"number\");",
+									"    pm.expect(json.totalRecords).to.be.a(\"number\");",
+									"});",
+									"pm.test(\"Nenhum usuário da lista traz a senha\", function () {",
+									"    pm.response.json().data.forEach(function (user) { pm.expect(user).to.not.have.property(\"password\"); });",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Visualizar por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/users/{{createdUserId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"{{createdUserId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro encontrado\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Traz o registro cadastrado no POST\", function () {",
+									"    pm.expect(json.id).to.eql(Number(pm.collectionVariables.get(\"createdUserId\")));",
+									"});",
+									"pm.test(\"Traz as entidades relacionadas (FK resolvida)\", function () {",
+									"    pm.expect(json.situation).to.be.an(\"object\");",
+									"});",
+									"pm.test(\"A senha não é devolvida\", function () {",
+									"    pm.expect(pm.response.json()).to.not.have.property(\"password\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Editar",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Vinicius S. Santos\",\n  \"email\": \"vinicius@teste.com\",\n  \"situationId\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/users/{{createdUserId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"{{createdUserId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro atualizado\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Campos enviados foram gravados\", function () {",
+									"    const sent = JSON.parse(pm.request.body.raw);",
+									"    const saved = pm.response.json().user;",
+									"    Object.keys(sent).forEach(function (field) {",
+									"        pm.expect(saved[field]).to.eql(sent[field]);",
+									"    });",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Editar senha",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - senha atualizada\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"// a senha nova é gravada criptografada (bcrypt) e nunca volta na resposta",
+									"pm.test(\"A senha não é devolvida na resposta\", function () {",
+									"    pm.expect(pm.response.json().user).to.not.have.property(\"password\");",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"654321\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/users/{{createdUserId}}/password",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"{{createdUserId}}",
+								"password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login com a senha nova",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"vinicius@teste.com\",\n  \"password\": \"654321\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								""
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - a senha nova funciona no login\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Login é do usuário criado nesta pasta e traz token\", function () {",
+									"    const user = pm.response.json().user;",
+									"    pm.expect(String(user.id)).to.eql(String(pm.collectionVariables.get(\"createdUserId\")));",
+									"    pm.expect(user.token).to.be.a(\"string\").and.not.empty;",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Login com a senha antiga",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"vinicius@teste.com\",\n  \"password\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								""
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 401 - a senha antiga não funciona mais\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"pm.test(\"Mensagem genérica de credenciais inválidas\", function () {",
+									"    pm.expect(pm.response.json().message).to.eql(\"Usuário ou senha inválidos\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/users/{{createdUserId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users",
+								"{{createdUserId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro removido\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "03 - Product Categories",
+			"item": [
+				{
+					"name": "Cadastrar",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"name\": \"informática\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/product-categories",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product-categories"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 - categoria cadastrado(a)\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Resposta traz o registro com id\", function () {",
+									"    pm.expect(json.productCategory.id).to.be.a(\"number\");",
+									"});",
+									"// guarda o id criado: as próximas requisições da pasta usam {{createdCategoryId}}",
+									"pm.collectionVariables.set(\"createdCategoryId\", json.productCategory.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Listar paginado",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/product-categories",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product-categories"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - listagem\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Resposta paginada (PaginationService)\", function () {",
+									"    pm.expect(json.data).to.be.an(\"array\");",
+									"    pm.expect(json.currentPage).to.be.a(\"number\");",
+									"    pm.expect(json.lastPage).to.be.a(\"number\");",
+									"    pm.expect(json.totalRecords).to.be.a(\"number\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Visualizar por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/product-categories/view/{{createdCategoryId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product-categories",
+								"view",
+								"{{createdCategoryId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro encontrado\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Traz o registro cadastrado no POST\", function () {",
+									"    pm.expect(json.id).to.eql(Number(pm.collectionVariables.get(\"createdCategoryId\")));",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Editar",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"name\": \"informática e games\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/product-categories/edit/{{createdCategoryId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product-categories",
+								"edit",
+								"{{createdCategoryId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro atualizado\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Campos enviados foram gravados\", function () {",
+									"    const sent = JSON.parse(pm.request.body.raw);",
+									"    const saved = pm.response.json().productCategory;",
+									"    Object.keys(sent).forEach(function (field) {",
+									"        pm.expect(saved[field]).to.eql(sent[field]);",
+									"    });",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/product-categories/delete/{{createdCategoryId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product-categories",
+								"delete",
+								"{{createdCategoryId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro removido\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "04 - Product Situations",
+			"item": [
+				{
+					"name": "Cadastrar",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"name\": \"pré-venda\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/product-situations",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product-situations"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 - situação de produto cadastrado(a)\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Resposta traz o registro com id\", function () {",
+									"    pm.expect(json.productSituation.id).to.be.a(\"number\");",
+									"});",
+									"// guarda o id criado: as próximas requisições da pasta usam {{createdProductSituationId}}",
+									"pm.collectionVariables.set(\"createdProductSituationId\", json.productSituation.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Listar paginado",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/product-situations",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product-situations"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - listagem\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Resposta paginada (PaginationService)\", function () {",
+									"    pm.expect(json.data).to.be.an(\"array\");",
+									"    pm.expect(json.currentPage).to.be.a(\"number\");",
+									"    pm.expect(json.lastPage).to.be.a(\"number\");",
+									"    pm.expect(json.totalRecords).to.be.a(\"number\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Visualizar por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/product-situations/view/{{createdProductSituationId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product-situations",
+								"view",
+								"{{createdProductSituationId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro encontrado\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Traz o registro cadastrado no POST\", function () {",
+									"    pm.expect(json.id).to.eql(Number(pm.collectionVariables.get(\"createdProductSituationId\")));",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Editar",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"name\": \"pré-venda encerrada\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/product-situations/edit/{{createdProductSituationId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product-situations",
+								"edit",
+								"{{createdProductSituationId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro atualizado\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Campos enviados foram gravados\", function () {",
+									"    const sent = JSON.parse(pm.request.body.raw);",
+									"    const saved = pm.response.json().productSituation;",
+									"    Object.keys(sent).forEach(function (field) {",
+									"        pm.expect(saved[field]).to.eql(sent[field]);",
+									"    });",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/product-situations/delete/{{createdProductSituationId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product-situations",
+								"delete",
+								"{{createdProductSituationId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro removido\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "05 - Products",
+			"item": [
+				{
+					"name": "Cadastrar",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Notebook Dell Inspiron\",\n  \"description\": \"Notebook com 16 GB de RAM e SSD de 512 GB.\",\n  \"price\": 3999.9,\n  \"productCategoryId\": 1,\n  \"productSituationId\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/products",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"products"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 - produto cadastrado(a)\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Resposta traz o registro com id\", function () {",
+									"    pm.expect(json.product.id).to.be.a(\"number\");",
+									"});",
+									"// guarda o id criado: as próximas requisições da pasta usam {{createdProductId}}",
+									"pm.collectionVariables.set(\"createdProductId\", json.product.id);",
+									"pm.test(\"Slug gerado a partir do nome\", function () {",
+									"    pm.expect(pm.response.json().product.slug).to.eql(\"notebook-dell-inspiron\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Listar paginado",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/products",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"products"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - listagem\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Resposta paginada (PaginationService)\", function () {",
+									"    pm.expect(json.data).to.be.an(\"array\");",
+									"    pm.expect(json.currentPage).to.be.a(\"number\");",
+									"    pm.expect(json.lastPage).to.be.a(\"number\");",
+									"    pm.expect(json.totalRecords).to.be.a(\"number\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Visualizar por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/products/view/{{createdProductId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"products",
+								"view",
+								"{{createdProductId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro encontrado\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"const json = pm.response.json();",
+									"pm.test(\"Traz o registro cadastrado no POST\", function () {",
+									"    pm.expect(json.id).to.eql(Number(pm.collectionVariables.get(\"createdProductId\")));",
+									"});",
+									"pm.test(\"Traz as entidades relacionadas (FK resolvida)\", function () {",
+									"    pm.expect(json.productCategory).to.be.an(\"object\");",
+									"    pm.expect(json.productSituation).to.be.an(\"object\");",
+									"});",
+									"pm.test(\"Preço vem como número\", function () {",
+									"    pm.expect(pm.response.json().price).to.be.a(\"number\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Editar",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Notebook Dell Inspiron 15\",\n  \"description\": \"Notebook com tela de 15 polegadas, 16 GB de RAM e SSD de 512 GB.\",\n  \"price\": 4299.9,\n  \"productCategoryId\": 1,\n  \"productSituationId\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/products/edit/{{createdProductId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"products",
+								"edit",
+								"{{createdProductId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro atualizado\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Campos enviados foram gravados\", function () {",
+									"    const sent = JSON.parse(pm.request.body.raw);",
+									"    const saved = pm.response.json().product;",
+									"    Object.keys(sent).forEach(function (field) {",
+									"        pm.expect(saved[field]).to.eql(sent[field]);",
+									"    });",
+									"});",
+									"pm.test(\"Slug atualizado junto com o nome\", function () {",
+									"    pm.expect(pm.response.json().product.slug).to.eql(\"notebook-dell-inspiron-15\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/products/delete/{{createdProductId}}",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"products",
+								"delete",
+								"{{createdProductId}}"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 200 - registro removido\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "06 - Casos de erro",
+			"item": [
+				{
+					"name": "404 ID inexistente",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/situations/view/9999",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"situations",
+								"view",
+								"9999"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 404 - registro inexistente\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"pm.test(\"Mensagem legível\", function () {",
+									"    pm.expect(pm.response.json().message).to.be.a(\"string\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "400 ID não numérico",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/situations/view/abc",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"situations",
+								"view",
+								"abc"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 400 - ID não numérico\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Mensagem legível\", function () {",
+									"    pm.expect(pm.response.json().message).to.be.a(\"string\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "400 Campo obrigatório faltando",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"name\": \"Sem situação\", \"email\": \"sem@teste.com\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/users",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 400 - campo obrigatório faltando\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Aponta o campo que faltou\", function () {",
+									"    pm.expect(pm.response.json().message).to.include(\"O campo situação é obrigatório\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "400 FK inexistente",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"FK inválida\",\n  \"email\": \"fk@teste.com\",\n  \"password\": \"123456\",\n  \"situationId\": 9999\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/users",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 400 - FK inexistente\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Mensagem legível\", function () {",
+									"    pm.expect(pm.response.json().message).to.be.a(\"string\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "400 Valor único duplicado",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"name\": \"livros\" }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/product-categories",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product-categories"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 400 - valor único duplicado\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Mensagem legível\", function () {",
+									"    pm.expect(pm.response.json().message).to.be.a(\"string\");",
+									"});",
+									"pm.test(\"Não expõe detalhes do banco na resposta\", function () {",
+									"    pm.expect(pm.response.json()).to.not.have.any.keys(\"query\", \"driverError\", \"error\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "400 Página inválida",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/situations?page=99",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"situations"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "99"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 400 - página inválida\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Informa o total de páginas\", function () {",
+									"    pm.expect(pm.response.json().message).to.include(\"Página inválida\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "201 ID no body é ignorado",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 1,\n  \"name\": \"tentativa de sobrescrita {{$timestamp}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/product-categories",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"product-categories"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 201 - cadastrou um registro novo\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"const created = pm.response.json().productCategory;",
+									"pm.test(\"O id do corpo foi ignorado: não sobrescreveu o registro 1\", function () {",
+									"    pm.expect(created.id).to.not.eql(1);",
+									"});",
+									"// remove o registro de teste para não deixar lixo no banco",
+									"pm.sendRequest({",
+									"    url: pm.variables.get(\"host\") + \"/product-categories/delete/\" + created.id,",
+									"    method: \"DELETE\",",
+									"}, function () {});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "400 Login sem e-mail e senha",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								""
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 400 - e-mail e senha obrigatórios\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Mensagem de campos obrigatórios\", function () {",
+									"    pm.expect(pm.response.json().message).to.eql(\"E-mail e senha são obrigatórios\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "401 Login com senha errada",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"senha-errada\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								""
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 401 - senha errada\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"pm.test(\"Mensagem genérica (não diz que o e-mail estava certo)\", function () {",
+									"    pm.expect(pm.response.json().message).to.eql(\"Usuário ou senha inválidos\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "401 Login com e-mail inexistente",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"naoexiste@teste.com\",\n  \"password\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								""
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 401 - e-mail não cadastrado\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"pm.test(\"Mesma mensagem da senha errada\", function () {",
+									"    pm.expect(pm.response.json().message).to.eql(\"Usuário ou senha inválidos\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "401 Rota restrita sem token",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}/users",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 401 - token não enviado\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"pm.test(\"Mensagem pedindo o token\", function () {",
+									"    pm.expect(pm.response.json().message).to.eql(\"Necessário enviar o token de autenticação\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "401 Token sem o prefixo Bearer",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/users",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"// o token é verdadeiro, mas o cabeçalho precisa ser \"Bearer <token>\"",
+									"pm.test(\"Status 401 - formato do cabeçalho inválido\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"pm.test(\"Mensagem explica o formato\", function () {",
+									"    pm.expect(pm.response.json().message).to.include(\"Bearer <token>\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "401 Token inválido",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer token-falso-123",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{host}}/users",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 401 - token falso\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"pm.test(\"Mensagem de token inválido ou expirado\", function () {",
+									"    pm.expect(pm.response.json().message).to.eql(\"Token inválido ou expirado\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "400 Recuperar senha sem dados",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/recover-password",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"recover-password"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 400 - campos obrigatórios\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Aponta o e-mail e a URL\", function () {",
+									"    const msg = pm.response.json().message;",
+									"    pm.expect(msg).to.include(\"O campo e-mail é obrigatório\");",
+									"    pm.expect(msg).to.include(\"O campo URL é obrigatório\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "400 Recuperar senha com URL inválida",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"urlRecoverPassword\": \"meusite\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/recover-password",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"recover-password"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 400 - URL inválida\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"pm.test(\"Mensagem pede um endereço http ou https\", function () {",
+									"    pm.expect(pm.response.json().message).to.include(\"O campo URL deve ser um endereço válido (http ou https)\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "404 Recuperar senha com e-mail inexistente",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"naoexiste@teste.com\",\n  \"urlRecoverPassword\": \"http://localhost:3000/recover-password\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{host}}/recover-password",
+							"host": [
+								"{{host}}"
+							],
+							"path": [
+								"recover-password"
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status 404 - usuário não encontrado\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"pm.test(\"Mensagem de usuário não encontrado\", function () {",
+									"    pm.expect(pm.response.json().message).to.eql(\"Usuário não encontrado\");",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "host",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "createdSituationId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "createdUserId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "createdCategoryId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "createdProductSituationId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "createdProductId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "recoverKey",
+			"value": "",
+			"type": "string"
+		}
+	]
 }

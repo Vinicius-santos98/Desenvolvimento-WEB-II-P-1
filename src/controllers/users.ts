@@ -9,6 +9,8 @@ import { Situations } from '../entity/situations';
 import { PaginationService } from '../services/pagination.service';
 import { handleError } from '../services/error.service';
 import { parseId, pickFields } from '../services/validation.service';
+// middleware que valida o token JWT nas rotas restritas
+import { verifyToken } from '../middlewares/auth.middleware';
 
 const router = Router();
 
@@ -33,9 +35,9 @@ async function validateSituation(situationId: unknown): Promise<string | null> {
   return null;
 }
 
-// Listar todos os usuários (paginado)
-// GET /users?page=1&limit=10
-router.get('/', async (request: Request, response: Response) => {
+// Listar todos os usuários (paginado) — rota restrita: exige token
+// GET /users?page=1&limit=10   (cabeçalho Authorization: Bearer <token>)
+router.get('/', verifyToken, async (request: Request, response: Response) => {
   try {
     const userRepository = AppDataSource.getRepository(Users);
 
